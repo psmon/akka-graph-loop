@@ -13,6 +13,7 @@
 - 🧩 **실행 샘플** — `src/AkkaGraphLoop.Samples`
   GraphDSL 기본 · fan-in/out junction 전체 · partial graph · 사이클 3가지 해법을 실제로 돌려보는 예제.
 - 🎬 **TUI 튜토리얼** — 각 그래프의 흐름을 **실제 스트림에 연결된** ASCII 애니메이션으로 단계별 관찰(스텝당 ~5초, ESC 일시정지, Ctrl+C 종료).
+- 🔁 **PDSA 루프** — 데밍의 Plan–Do–Study–Act 지속개선 사이클을 실제 피드백 그래프로 구현한 별도 실행 샘플(`-- pdsa`).
 - 🧪 **테스트** — `tests/AkkaGraphLoop.Tests`
   xUnit + Akka TestKit 으로 각 junction의 동작과 **사이클의 liveness(데드락 없음)** 를 검증(총 22개).
 
@@ -79,6 +80,25 @@ dotnet run --project src/AkkaGraphLoop.Samples -- 10
 # [MergePreferredCycle] => [1, 2, 3, ... , 20]
 ```
 
+## PDSA 루프 (Deming) — 별도 실행
+
+데밍(W. Edwards Deming)의 **PDSA(Plan–Do–Study–Act)** 지속개선 루프를 **실제 Akka.Streams 피드백 사이클**로
+구현한 독립 샘플이다. `Act` 의 결과가 다음 `Plan` 으로 되먹여지며, 품질이 목표에 도달하면 수렴하고 종료한다.
+
+```bash
+dotnet run --project src/AkkaGraphLoop.Samples -- pdsa
+```
+
+```
+ seed ─▶ (MergePreferred) ─▶ Plan ─▶ Do ─▶ Study ─▶ Act ─▶ TakeWhile(미달) ─▶ Broadcast ─▶ Sink
+              ▲                                                                     │
+              └───────────────── (다음 회차 준비) ◀── Feedback ◀─────────────────────┘
+```
+
+- MergePreferred 의 우선 포트로 피드백을 넣어 데드락 없이 루프가 흐른다(liveness).
+- 목표 품질 도달 시 `TakeWhile(inclusive)` 이 수렴 원소까지 방출하고 루프를 종료(수렴).
+- **데밍 포인트**: 3단계는 PDCA 의 'Check(잘 됐나?)'가 아니라 **'Study(무엇을 배웠나?)'** — 분석적 학습이 루프를 굴린다.
+
 ## 구조
 
 ```
@@ -88,11 +108,12 @@ src/AkkaGraphLoop.Samples/
   FanIn/FanInSamples.cs        # Merge*, Zip, ZipWith, Concat
   Partial/PartialGraphSamples.cs  # UniformFanInShape, Source/Flow.FromGraph
   Cycles/CycleSamples.cs       # 사이클 데드락과 3가지 해법
+  Pdsa/PdsaLoop.cs             # 데밍 PDSA 지속개선 루프(피드백 사이클, -- pdsa)
   Tui/                         # TUI 튜토리얼 모드
     Pacer.cs                   #   흐름 속도 제어(5초/스텝)·일시정지·취소·노드 상태
     Term.cs / Renderer.cs      #   ANSI 터미널 제어 · 프레임 렌더링
     Scene.cs / Scenes.cs       #   장면 추상화 · 계측된 실제 그래프 + ASCII 다이어그램
     TuiApp.cs                  #   장면 순차 실행 · 입력(ESC/Ctrl+C) 처리
 tests/AkkaGraphLoop.Tests/
-  FanInOutTests.cs / PartialGraphTests.cs / CycleTests.cs / TuiSceneTests.cs
+  FanInOutTests.cs / PartialGraphTests.cs / CycleTests.cs / TuiSceneTests.cs / PdsaTests.cs
 ```

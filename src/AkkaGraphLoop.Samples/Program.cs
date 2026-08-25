@@ -4,6 +4,7 @@ using AkkaGraphLoop.Samples.Cycles;
 using AkkaGraphLoop.Samples.FanIn;
 using AkkaGraphLoop.Samples.FanOut;
 using AkkaGraphLoop.Samples.Partial;
+using AkkaGraphLoop.Samples.Pdsa;
 using AkkaGraphLoop.Samples.Tui;
 
 // 인자가 없거나 "tui" 이면 TUI 튜토리얼 모드로 실행한다.
@@ -12,6 +13,14 @@ using AkkaGraphLoop.Samples.Tui;
 if (args.Length == 0 || string.Equals(args[0], "tui", StringComparison.OrdinalIgnoreCase))
 {
     await TuiApp.Run();
+    return;
+}
+
+// "pdsa": 데밍의 PDSA(Plan-Do-Study-Act) 지속개선 루프를 Akka 피드백 사이클로 실행(별도 작동).
+if (string.Equals(args[0], "pdsa", StringComparison.OrdinalIgnoreCase))
+{
+    using var pdsaHost = new DemoHost("pdsa");
+    await PdsaLoop.RunConsole(pdsaHost.Materializer);
     return;
 }
 
