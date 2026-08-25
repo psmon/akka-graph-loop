@@ -14,9 +14,10 @@ public sealed class KuzuGraph : IDisposable
     private Connection _conn;
     private bool _disposed;
 
-    public KuzuGraph(string databasePath)
+    public KuzuGraph(string databasePath, bool readOnly = false)
     {
         var config = kuzu_default_system_config();
+        config.ReadOnly = readOnly;
         if (kuzu_database_init(databasePath, config, out _db) != Success)
             throw new InvalidOperationException($"Kùzu 데이터베이스를 열지 못했습니다: {databasePath}");
         if (kuzu_connection_init(ref _db, out _conn) != Success)

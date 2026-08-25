@@ -14,6 +14,7 @@
   GraphDSL 기본 · fan-in/out junction 전체 · partial graph · 사이클 3가지 해법을 실제로 돌려보는 예제.
 - 🎬 **TUI 튜토리얼** — 각 그래프의 흐름을 **실제 스트림에 연결된** ASCII 애니메이션으로 단계별 관찰(스텝당 ~5초, ESC 일시정지, Ctrl+C 종료).
 - 🔁 **PDSA 루프** — 데밍의 Plan–Do–Study–Act 지속개선 사이클을 실제 피드백 그래프로 구현한 별도 실행 샘플(`-- pdsa`). 각 회차는 스트림 진행 중 **Kùzu 임베디드 그래프 DB**에 실시간 기록되고 Cypher 로 되읽는다.
+- 🖥️ **그래프 뷰어** — 기록된 Kùzu 그래프를 **별도 웹 프로젝트**로 시각화(로컬 포트, 외부 CDN 없는 SVG 포스 레이아웃).
 - 🧪 **테스트** — `tests/AkkaGraphLoop.Tests`
   xUnit + Akka TestKit 으로 각 junction의 동작과 **사이클의 liveness(데드락 없음)** 를 검증(총 22개).
 
@@ -120,6 +121,24 @@ git 에는 바이너리를 커밋하지 않으며 첫 빌드에만 네트워크�
 > 참고: "애플이 인수해 오픈소스화한" DB는 **FoundationDB**(2015 인수 → 2018 오픈소스)이지만, 이는 분산 KV 스토어라
 > 인프로세스 임베디드 그래프 용도에는 맞지 않아 Kùzu 를 채택했다.
 
+### 그래프 뷰어 (별도 프로젝트, 로컬 포트)
+
+기록된 Kùzu 그래프를 **분리된 웹 프로젝트**(`AkkaGraphLoop.Viewer`)에서 시각화한다.
+ASP.NET Core 최소 API 가 DB 를 읽어(읽기 전용) `/api/graph` JSON 으로 제공하고, 외부 CDN 없는
+자체 포함 HTML(vanilla JS + SVG 포스 레이아웃)로 그래프를 그린다.
+
+```bash
+# 1) 데이터 생성(고정 경로에 기록)
+dotnet run --project src/AkkaGraphLoop.Samples -- pdsa
+# 2) 뷰어 실행 → 브라우저에서 http://localhost:5099
+dotnet run --project src/AkkaGraphLoop.Viewer
+```
+
+- 옵션: `--port <번호>`(기본 5099), `--db <경로>`(기본 = 샘플과 공유하는 고정 경로).
+- Run(파란 사각형) · Cycle(원, 수렴 시 초록) 노드, `HAS_CYCLE`(점선) · `NEXT`(실선 화살표) 엣지.
+- 노드 클릭 시 우측 패널에 속성(품질/수렴 등) 표시, 드래그 이동, 새로고침·재배치 버튼.
+- 뷰어는 매 요청마다 DB 를 읽기 전용으로 열고 닫으므로, `-- pdsa` 를 다시 돌린 뒤 새로고침하면 최신 그래프가 보인다.
+
 ## 구조
 
 ```
@@ -131,15 +150,20 @@ src/AkkaGraphLoop.Samples/
   Cycles/CycleSamples.cs       # 사이클 데드락과 3가지 해법
   Pdsa/                        # 데밍 PDSA 지속개선 루프(피드백 사이클, -- pdsa)
     PdsaLoop.cs                #   Plan/Do/Study/Act 사이클 + 실시간 그래프 기록 스테이지
-    PdsaGraphStore.cs          #   IPdsaGraphStore + Kùzu 구현(Cypher 기록/되읽기)
+    PdsaGraphStore.cs          #   IPdsaGraphStore + Kùzu 구현(Cypher 기록)
+    PdsaGraphReader.cs         #   그래프 되읽기(뷰어용 노드/엣지 모델)
+    PdsaPaths.cs               #   샘플·뷰어가 공유하는 DB 고정 경로
   Kuzu/                        # Kùzu 임베디드 그래프 DB 인터롭
     KuzuNative.cs / KuzuGraph.cs  #   C API P/Invoke · 얇은 관리형 래퍼
   Tui/                         # TUI 튜토리얼 모드
-native/Kuzu.targets            # libkuzu 네이티브 라이브러리 빌드시 자동 다운로드
     Pacer.cs                   #   흐름 속도 제어(5초/스텝)·일시정지·취소·노드 상태
     Term.cs / Renderer.cs      #   ANSI 터미널 제어 · 프레임 렌더링
     Scene.cs / Scenes.cs       #   장면 추상화 · 계측된 실제 그래프 + ASCII 다이어그램
     TuiApp.cs                  #   장면 순차 실행 · 입력(ESC/Ctrl+C) 처리
+src/AkkaGraphLoop.Viewer/      # 그래프 뷰어(별도 웹 프로젝트, 로컬 포트)
+  Program.cs                   #   ASP.NET Core 최소 API: / 및 /api/graph
+  ViewerHtml.cs                #   자체 포함 HTML(vanilla JS + SVG 포스 레이아웃)
+native/Kuzu.targets            # libkuzu 네이티브 라이브러리 빌드시 자동 다운로드
 tests/AkkaGraphLoop.Tests/
   FanInOutTests.cs / PartialGraphTests.cs / CycleTests.cs
   TuiSceneTests.cs / PdsaTests.cs / PdsaGraphStoreTests.cs

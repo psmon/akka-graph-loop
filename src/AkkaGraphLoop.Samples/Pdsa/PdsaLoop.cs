@@ -116,8 +116,9 @@ public static class PdsaLoop
         Console.WriteLine("│  각 회차는 진행 중 Kùzu 임베디드 그래프 DB에 실시간 기록됨    │");
         Console.WriteLine("└───────────────────────────────────────────────────────────┘");
 
-        // 실행마다 새 임시 DB 디렉터리에 그래프를 기록한다.
-        var dbPath = Path.Combine(Path.GetTempPath(), "pdsa_kuzu_" + Guid.NewGuid().ToString("N"));
+        // 뷰어와 공유하는 고정 경로에 기록한다(실행마다 초기화하여 새로 씀).
+        var dbPath = PdsaPaths.DefaultDbPath;
+        PdsaPaths.Reset(dbPath);
         using var store = new KuzuPdsaStore(dbPath, start, target);
 
         var history = await Run(mat, start, target, store: store);
@@ -134,5 +135,7 @@ public static class PdsaLoop
 
         Console.WriteLine("");
         Console.WriteLine($"■ 데밍 포인트: 3단계는 'Check(잘 됐나?)'가 아니라 'Study(무엇을 배웠나?)' — 지속적 학습이 루프를 굴린다.");
+        Console.WriteLine("");
+        Console.WriteLine("▶ 그래프 뷰어로 보기: dotnet run --project src/AkkaGraphLoop.Viewer  → http://localhost:5099");
     }
 }
