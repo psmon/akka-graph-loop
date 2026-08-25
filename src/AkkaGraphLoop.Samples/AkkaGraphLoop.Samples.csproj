@@ -11,4 +11,7 @@
     <PackageReference Include="Akka.Streams" Version="1.5.70" />
   </ItemGroup>
 
+  <!-- Kùzu 임베디드 그래프 DB 네이티브 라이브러리를 빌드 시 출력 폴더로 준비 -->
+  <Import Project="..\..\native\Kuzu.targets" />
+
 </Project>

@@ -25,4 +25,7 @@
     <ProjectReference Include="..\..\src\AkkaGraphLoop.Samples\AkkaGraphLoop.Samples.csproj" />
   </ItemGroup>
 
+  <!-- Kùzu 네이티브 라이브러리를 테스트 출력 폴더에도 준비 -->
+  <Import Project="..\..\native\Kuzu.targets" />
+
 </Project>

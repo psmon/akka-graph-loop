@@ -36,7 +36,8 @@ public static class PdsaLoop
         IMaterializer mat,
         double start = 45,
         double target = 90,
-        Action<string>? log = null)
+        Action<string>? log = null,
+        IPdsaGraphStore? store = null)
     {
         log ??= Console.WriteLine;
         var seed = Source.Single(new PdsaState(1, start, target));
@@ -74,6 +75,13 @@ public static class PdsaLoop
             return s;
         });
 
+        // 스트림 진행 '중'에 각 회차 결과를 그래프 DB에 실시간 기록(내장 GraphDB).
+        var record = Flow.Create<PdsaState>().Select(s =>
+        {
+            store?.RecordCycle(s);
+            return s;
+        });
+
         // 다음 회차 준비: 회차 번호만 증가시켜 되먹인다(품질은 이미 Study 에서 갱신됨).
         var feedback = Flow.Create<PdsaState>().Select(s => s with { Iteration = s.Iteration + 1 });
 
@@ -85,7 +93,7 @@ public static class PdsaLoop
 
             b.From(seed).To(merge.In(0)); // 초기 상태 -> secondary
             b.From(merge.Out)
-                .Via(plan).Via(@do).Via(study).Via(act)
+                .Via(plan).Via(@do).Via(study).Via(act).Via(record)
                 .Via(Flow.Create<PdsaState>().TakeWhile(s => !s.Converged, inclusive: true)) // 수렴 원소까지 방출 후 종료
                 .To(broadcast.In);
 
@@ -97,19 +105,34 @@ public static class PdsaLoop
         return graph.RunWith(Sink.Seq<PdsaState>(), mat);
     }
 
-    /// <summary>콘솔 실행 진입점: 소개 → 사이클 로그 → 요약.</summary>
-    public static async Task RunConsole(IMaterializer mat)
+    /// <summary>
+    /// 콘솔 실행 진입점: 소개 → 사이클 로그(진행 중 Kùzu 그래프 DB에 실시간 기록) → 그래프 되읽기 → 요약.
+    /// </summary>
+    public static async Task RunConsole(IMaterializer mat, double start = 45, double target = 90)
     {
         Console.WriteLine("┌───────────────────────────────────────────────────────────┐");
         Console.WriteLine("│  PDSA 루프 (Deming) — Akka.Streams 피드백 사이클로 구현      │");
         Console.WriteLine("│  Plan → Do → Study → Act → (Act 결과를 다음 Plan 으로 피드백) │");
+        Console.WriteLine("│  각 회차는 진행 중 Kùzu 임베디드 그래프 DB에 실시간 기록됨    │");
         Console.WriteLine("└───────────────────────────────────────────────────────────┘");
 
-        var history = await Run(mat);
+        // 실행마다 새 임시 DB 디렉터리에 그래프를 기록한다.
+        var dbPath = Path.Combine(Path.GetTempPath(), "pdsa_kuzu_" + Guid.NewGuid().ToString("N"));
+        using var store = new KuzuPdsaStore(dbPath, start, target);
 
+        var history = await Run(mat, start, target, store: store);
         var final = history[^1];
+
         Console.WriteLine("");
         Console.WriteLine($"■ 수렴 완료: 총 {history.Count}회 사이클, 최종 품질 {final.Quality:0.0} (목표 {final.Target:0.0}).");
+
+        // 스트림이 아니라, 방금 기록한 '그래프 DB'를 Cypher 로 되읽어 표시(진짜 GraphDB 기록임을 입증).
+        Console.WriteLine("");
+        Console.WriteLine($"■ Kùzu 그래프 되읽기 (경로 길이 NEXT×{store.CountNextEdges()}):  DB={dbPath}");
+        foreach (var line in store.ReadProgress())
+            Console.WriteLine($"    {line}");
+
+        Console.WriteLine("");
         Console.WriteLine($"■ 데밍 포인트: 3단계는 'Check(잘 됐나?)'가 아니라 'Study(무엇을 배웠나?)' — 지속적 학습이 루프를 굴린다.");
     }
 }

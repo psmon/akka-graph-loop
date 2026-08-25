@@ -10,6 +10,14 @@ artifacts/
 .vs/
 *.user
 
+# Secrets — never commit
+.secret/
+*.secret
+secrets.json
+
+# Kùzu native library cache (downloaded at build time)
+native/_cache/
+
 # Test/coverage
 [Tt]est[Rr]esult*/
 coverage*.json
