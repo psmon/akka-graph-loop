@@ -10,9 +10,9 @@ artifacts/
 .vs/
 *.user
 
-# Secrets — never commit
-.secret/
-*.secret
+# Secrets — 실제 시크릿(.secret/*.json)은 제외, *.tmp 템플릿은 커밋 허용
+.secret/*.json
+!.secret/*.json.tmp
 secrets.json
 
 # Kùzu native library cache (downloaded at build time)
