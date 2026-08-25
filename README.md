@@ -149,7 +149,8 @@ dotnet run --project src/AkkaGraphLoop.Viewer
 ### PDSA 워크플로 (한 사이클)
 
 ```bash
-pdsa config --api-key <키> --model gpt-5.6-tera   # 최초 1회: LLM 설정(전역)
+pdsa config key <키>   # 최초 1회: 키 설정(또는 key-file <파일>). 모델은 pdsa config model <모델>
+pdsa check              # LLM 호출 확인
 pdsa plan  "<계획>"     # 계획 입력 → LLM 이 '가설'까지 세워 코칭(새 사이클 시작)
 pdsa do    "<수행한 것>" # 수행 보고 → Plan→Do 를 그래프로 정리
 pdsa study "<결과/관찰>" # 결과 보고 → 무엇을 배웠나(학습)·개선점 도출 (Check 아님)
@@ -190,18 +191,26 @@ dotnet publish src/pdsa-cli -c Release -r win-x64
 - `TrimmerRootAssembly` 로 Akka 어셈블리를 빌드에 통째로 포함.
 - 참고: 이 환경에서 AOT 링크에는 VS Build Tools(C++) 가 필요하며, `vswhere.exe` 경로(VS Installer 폴더)가 PATH 에 있어야 한다.
 
-### LLM(OpenAI) 설정
+### LLM(OpenAI) 설정 — 키/모델 분리 · 키 파일 위치
 
-우선순위: 환경변수 → 전역 설정(`{LocalAppData}/pdsa-cli/openai.json`, `pdsa config` 로 저장) → 레포 `.secret/openai.json`.
-기본 모델은 `gpt-5.6-tera`(설정 가능).
+키 설정과 모델 설정을 **분리**했다(키를 넣은 뒤 모델만 갈아끼우기 가능). 키는 직접 넣거나
+**파일 위치**로 지정할 수 있어 키를 설정에 노출하지 않는다.
 
 ```bash
-pdsa config --api-key <키> --model gpt-5.6-tera [--base-url <URL>]
-pdsa config                 # 현재 설정 표시(키 마스킹)
-# 또는 환경변수: OPENAI_API_KEY / OPENAI_MODEL / OPENAI_BASE_URL
+pdsa config key <키>            # 키 직접 입력
+pdsa config key-file <파일경로>  # 키 파일 위치만 저장(키 미노출). 파일은 .secret/openai.json 포맷 또는 원시 키
+pdsa config model <모델>         # 모델만 설정(키 유지)
+pdsa config base-url <URL>       # 엔드포인트
+pdsa config show                 # 현재 설정(키 마스킹, 출처 표기)
+pdsa check                       # 실제 LLM 호출로 연결 확인
 ```
 
+로드 우선순위: 환경변수(`OPENAI_API_KEY`/`OPENAI_MODEL`/`OPENAI_BASE_URL`) → 전역 설정
+(`{LocalAppData}/pdsa-cli/openai.json`) → 레포 `.secret/openai.json`. 설정 파일은 trailing comma/주석을 허용한다.
 실제 키 파일(`.secret/*.json`, 전역 설정)은 git 에 커밋되지 않는다.
+
+> 참고: 기본 모델은 `gpt-5.6-tera` 이지만 표준 OpenAI 엔드포인트에는 존재하지 않는다(`model_not_found`).
+> 유효한 모델로 설정하거나(`pdsa config model gpt-4o-mini` 등) 해당 모델을 제공하는 `base-url` 을 지정할 것.
 
 ## 구조
 

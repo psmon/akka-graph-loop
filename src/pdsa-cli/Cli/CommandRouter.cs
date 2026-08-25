@@ -63,7 +63,8 @@ public sealed class CommandRouter
         foreach (var c in _commands)
             Console.WriteLine($"  {c.Name,-8} {c.Summary}");
         Console.WriteLine();
-        Console.WriteLine("먼저 LLM 설정:  pdsa config --api-key <키> --model <모델>");
+        Console.WriteLine("먼저 LLM 설정:  pdsa config key <키>  (또는 key-file <파일>) ,  pdsa config model <모델>");
+        Console.WriteLine("호출 확인:      pdsa check");
         Console.WriteLine("각 명령 상세:   pdsa <명령> --help");
     }
 }
