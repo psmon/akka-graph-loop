@@ -1,0 +1,8 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/AkkaGraphLoop.Samples/AkkaGraphLoop.Samples.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/AkkaGraphLoop.Tests/AkkaGraphLoop.Tests.csproj" />
+  </Folder>
+</Solution>
