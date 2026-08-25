@@ -1,7 +1,7 @@
 using System.Globalization;
-using AkkaGraphLoop.Samples.Kuzu;
+using AkkaGraphLoop.Core.Kuzu;
 
-namespace AkkaGraphLoop.Samples.Pdsa;
+namespace AkkaGraphLoop.Core.Pdsa;
 
 /// <summary>PDSA 진행 상황을 그래프로 기록하는 저장소(스트림 진행 중 실시간 호출됨).</summary>
 public interface IPdsaGraphStore

@@ -1,0 +1,38 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <AssemblyName>pdsa</AssemblyName>
+    <RootNamespace>PdsaCli</RootNamespace>
+
+    <!--
+      배포: Native AOT 단일 네이티브 실행 파일.
+        dotnet publish src/pdsa-cli -c Release -r win-x64
+      Akka.NET 은 명시적 Config(ConfigurationFactory.Default)로 ConfigurationManager 경로를
+      우회하면 AOT 에서 동작한다(AkkaPdsaEngine 참고). 네이티브 Kùzu 는 P/Invoke 로 이용.
+    -->
+    <PublishAot>true</PublishAot>
+    <InvariantGlobalization>true</InvariantGlobalization>
+    <IlcTrimMetadata>false</IlcTrimMetadata>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Akka 기반 PDSA 엔진 + Kùzu 그래프 저장소/리더를 재사용(Core 라이브러리) -->
+    <ProjectReference Include="..\AkkaGraphLoop.Core\AkkaGraphLoop.Core.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- 빌드시 Akka 어셈블리를 통째로 포함(AOT/트림 제거 방지) -->
+    <TrimmerRootAssembly Include="Akka" />
+    <TrimmerRootAssembly Include="Akka.Streams" />
+    <TrimmerRootAssembly Include="Newtonsoft.Json" />
+    <TrimmerRootAssembly Include="System.Configuration.ConfigurationManager" />
+  </ItemGroup>
+
+  <!-- Kùzu 네이티브 라이브러리를 CLI 출력/게시 폴더에도 준비 -->
+  <Import Project="..\..\native\Kuzu.targets" />
+
+</Project>

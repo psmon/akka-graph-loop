@@ -1,4 +1,4 @@
-namespace AkkaGraphLoop.Samples.Pdsa;
+namespace AkkaGraphLoop.Core.Pdsa;
 
 /// <summary>PDSA 그래프 DB의 기본 경로. 샘플(기록)과 뷰어(조회)가 같은 위치를 공유한다.</summary>
 public static class PdsaPaths

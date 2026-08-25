@@ -1,6 +1,6 @@
 using System.Runtime.InteropServices;
 
-namespace AkkaGraphLoop.Samples.Kuzu;
+namespace AkkaGraphLoop.Core.Kuzu;
 
 /// <summary>
 /// Kùzu 임베디드 그래프 DB의 C API(<c>kuzu.h</c>) P/Invoke 선언.

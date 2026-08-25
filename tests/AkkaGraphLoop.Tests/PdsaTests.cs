@@ -1,4 +1,4 @@
-using AkkaGraphLoop.Samples.Pdsa;
+using AkkaGraphLoop.Core.Pdsa;
 
 namespace AkkaGraphLoop.Tests;
 

@@ -1,4 +1,4 @@
-using AkkaGraphLoop.Samples.Pdsa;
+using AkkaGraphLoop.Core.Pdsa;
 using AkkaGraphLoop.Viewer;
 
 // 인자: --db <경로> (기본: PdsaPaths.DefaultDbPath), --port <번호> (기본: 5099)

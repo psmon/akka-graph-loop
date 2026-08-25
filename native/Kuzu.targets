@@ -1,36 +1,43 @@
 <Project>
   <!--
-    Kùzu(임베디드 그래프 DB)의 네이티브 라이브러리를 빌드 시점에 내려받아 출력 폴더로 복사한다.
+    Kùzu(임베디드 그래프 DB)의 네이티브 라이브러리를 빌드 시점에 내려받아 출력/게시 폴더로 포함한다.
     12MB+ 바이너리를 git 에 커밋하지 않으면서도, 현재 OS/아키텍처에 맞는 libkuzu 가
-    빌드/실행/테스트 출력에 자동으로 놓이게 한다(버전 고정: $(KuzuVersion)).
+    빌드(bin) 및 publish 출력에 자동으로 놓이게 한다(버전 고정: $(KuzuVersion)).
+    (호스트 OS/아키텍처 기준으로 선택하므로 동일 플랫폼 publish 를 전제로 한다.)
   -->
   <PropertyGroup>
     <KuzuVersion>0.11.3</KuzuVersion>
     <KuzuBaseUrl>https://github.com/kuzudb/kuzu/releases/download/v$(KuzuVersion)</KuzuBaseUrl>
-    <!-- 내려받은 아카이브/추출물 캐시(레포에 커밋 안 함; .gitignore 처리) -->
     <KuzuCacheDir>$(MSBuildThisFileDirectory)_cache\$(KuzuVersion)\</KuzuCacheDir>
+
+    <_KuzuArch>$([System.Runtime.InteropServices.RuntimeInformation]::ProcessArchitecture)</_KuzuArch>
+
+    <_KuzuAsset Condition="$([MSBuild]::IsOSPlatform('Windows'))">libkuzu-windows-x86_64.zip</_KuzuAsset>
+    <_KuzuLib   Condition="$([MSBuild]::IsOSPlatform('Windows'))">kuzu_shared.dll</_KuzuLib>
+
+    <_KuzuAsset Condition="$([MSBuild]::IsOSPlatform('Linux')) and '$(_KuzuArch)' == 'Arm64'">libkuzu-linux-aarch64.tar.gz</_KuzuAsset>
+    <_KuzuAsset Condition="$([MSBuild]::IsOSPlatform('Linux')) and '$(_KuzuArch)' != 'Arm64'">libkuzu-linux-x86_64.tar.gz</_KuzuAsset>
+    <_KuzuLib   Condition="$([MSBuild]::IsOSPlatform('Linux'))">libkuzu.so</_KuzuLib>
+
+    <_KuzuAsset Condition="$([MSBuild]::IsOSPlatform('OSX'))">libkuzu-osx-universal.tar.gz</_KuzuAsset>
+    <_KuzuLib   Condition="$([MSBuild]::IsOSPlatform('OSX'))">libkuzu.dylib</_KuzuLib>
+
+    <_KuzuArchive>$(KuzuCacheDir)$(_KuzuAsset)</_KuzuArchive>
+    <_KuzuExtractedLib>$(KuzuCacheDir)$(_KuzuLib)</_KuzuExtractedLib>
   </PropertyGroup>
 
-  <Target Name="EnsureKuzuNative" BeforeTargets="BeforeBuild;Build">
-    <PropertyGroup>
-      <_KuzuArch>$([System.Runtime.InteropServices.RuntimeInformation]::ProcessArchitecture)</_KuzuArch>
+  <!-- 출력(bin)과 publish 양쪽에 네이티브 라이브러리 복사 -->
+  <ItemGroup>
+    <None Include="$(_KuzuExtractedLib)">
+      <Link>$(_KuzuLib)</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+      <Visible>false</Visible>
+    </None>
+  </ItemGroup>
 
-      <!-- OS/아키텍처 → 릴리스 자산 및 공유 라이브러리 파일명 매핑 -->
-      <_KuzuAsset Condition="$([MSBuild]::IsOSPlatform('Windows'))">libkuzu-windows-x86_64.zip</_KuzuAsset>
-      <_KuzuLib   Condition="$([MSBuild]::IsOSPlatform('Windows'))">kuzu_shared.dll</_KuzuLib>
-
-      <_KuzuAsset Condition="$([MSBuild]::IsOSPlatform('Linux')) and '$(_KuzuArch)' == 'Arm64'">libkuzu-linux-aarch64.tar.gz</_KuzuAsset>
-      <_KuzuAsset Condition="$([MSBuild]::IsOSPlatform('Linux')) and '$(_KuzuArch)' != 'Arm64'">libkuzu-linux-x86_64.tar.gz</_KuzuAsset>
-      <_KuzuLib   Condition="$([MSBuild]::IsOSPlatform('Linux'))">libkuzu.so</_KuzuLib>
-
-      <_KuzuAsset Condition="$([MSBuild]::IsOSPlatform('OSX'))">libkuzu-osx-universal.tar.gz</_KuzuAsset>
-      <_KuzuLib   Condition="$([MSBuild]::IsOSPlatform('OSX'))">libkuzu.dylib</_KuzuLib>
-
-      <_KuzuArchive>$(KuzuCacheDir)$(_KuzuAsset)</_KuzuArchive>
-      <_KuzuExtractedLib>$(KuzuCacheDir)$(_KuzuLib)</_KuzuExtractedLib>
-      <_KuzuOutputLib>$(OutDir)$(_KuzuLib)</_KuzuOutputLib>
-    </PropertyGroup>
-
+  <!-- 복사 이전(경로 계산 전)에 네이티브 라이브러리를 확보 -->
+  <Target Name="EnsureKuzuNative" BeforeTargets="AssignTargetPaths;BeforeBuild;Build">
     <!-- 1) 아카이브 다운로드(캐시에 없을 때만) -->
     <DownloadFile Condition="!Exists('$(_KuzuArchive)')"
                   SourceUrl="$(KuzuBaseUrl)/$(_KuzuAsset)"
@@ -38,7 +45,7 @@
                   DestinationFileName="$(_KuzuAsset)"
                   SkipUnchangedFiles="true" />
 
-    <!-- 2) 공유 라이브러리 추출(캐시에 없을 때만): .zip 은 Unzip, .tar.gz 는 tar -->
+    <!-- 2) 공유 라이브러리 추출: .zip 은 Unzip, .tar.gz 는 tar -->
     <Unzip Condition="!Exists('$(_KuzuExtractedLib)') and '$(_KuzuAsset.EndsWith(`.zip`))' == 'true'"
            SourceFiles="$(_KuzuArchive)"
            DestinationFolder="$(KuzuCacheDir)"
@@ -46,13 +53,7 @@
     <Exec Condition="!Exists('$(_KuzuExtractedLib)') and '$(_KuzuAsset.EndsWith(`.tar.gz`))' == 'true'"
           Command="tar -xzf &quot;$(_KuzuArchive)&quot; -C &quot;$(KuzuCacheDir)&quot;" />
 
-    <!-- 3) 출력 폴더로 복사(없거나 오래됐을 때만) -->
-    <Copy Condition="Exists('$(_KuzuExtractedLib)')"
-          SourceFiles="$(_KuzuExtractedLib)"
-          DestinationFolder="$(OutDir)"
-          SkipUnchangedFiles="true" />
-
-    <Warning Condition="!Exists('$(_KuzuOutputLib)')"
+    <Warning Condition="!Exists('$(_KuzuExtractedLib)')"
              Text="Kùzu 네이티브 라이브러리($(_KuzuLib))를 준비하지 못했습니다. 네트워크/플랫폼을 확인하세요." />
   </Target>
 </Project>

@@ -1,7 +1,7 @@
 using System.Runtime.InteropServices;
-using static AkkaGraphLoop.Samples.Kuzu.KuzuNative;
+using static AkkaGraphLoop.Core.Kuzu.KuzuNative;
 
-namespace AkkaGraphLoop.Samples.Kuzu;
+namespace AkkaGraphLoop.Core.Kuzu;
 
 /// <summary>
 /// Kùzu 임베디드 그래프 DB에 대한 얇은 관리형 래퍼.

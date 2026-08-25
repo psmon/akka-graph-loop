@@ -1,7 +1,11 @@
 <Solution>
   <Folder Name="/src/">
+    <Project Path="src/AkkaGraphLoop.Core/AkkaGraphLoop.Core.csproj" />
     <Project Path="src/AkkaGraphLoop.Samples/AkkaGraphLoop.Samples.csproj" />
     <Project Path="src/AkkaGraphLoop.Viewer/AkkaGraphLoop.Viewer.csproj" />
+  </Folder>
+  <Folder Name="/src/pdsa-cli/">
+    <Project Path="src/pdsa-cli/PdsaCli.csproj" />
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/AkkaGraphLoop.Tests/AkkaGraphLoop.Tests.csproj" />

@@ -9,7 +9,7 @@
 
   <ItemGroup>
     <!-- Kùzu 인터롭(KuzuGraph)과 PDSA 리더를 재사용 -->
-    <ProjectReference Include="..\AkkaGraphLoop.Samples\AkkaGraphLoop.Samples.csproj" />
+    <ProjectReference Include="..\AkkaGraphLoop.Core\AkkaGraphLoop.Core.csproj" />
   </ItemGroup>
 
   <!-- Kùzu 네이티브 라이브러리를 뷰어 출력 폴더에도 준비 -->

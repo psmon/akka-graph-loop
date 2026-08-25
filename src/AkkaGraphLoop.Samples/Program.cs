@@ -4,7 +4,7 @@ using AkkaGraphLoop.Samples.Cycles;
 using AkkaGraphLoop.Samples.FanIn;
 using AkkaGraphLoop.Samples.FanOut;
 using AkkaGraphLoop.Samples.Partial;
-using AkkaGraphLoop.Samples.Pdsa;
+using AkkaGraphLoop.Core.Pdsa;
 using AkkaGraphLoop.Samples.Tui;
 
 // 인자가 없거나 "tui" 이면 TUI 튜토리얼 모드로 실행한다.

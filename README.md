@@ -15,6 +15,7 @@
 - 🎬 **TUI 튜토리얼** — 각 그래프의 흐름을 **실제 스트림에 연결된** ASCII 애니메이션으로 단계별 관찰(스텝당 ~5초, ESC 일시정지, Ctrl+C 종료).
 - 🔁 **PDSA 루프** — 데밍의 Plan–Do–Study–Act 지속개선 사이클을 실제 피드백 그래프로 구현한 별도 실행 샘플(`-- pdsa`). 각 회차는 스트림 진행 중 **Kùzu 임베디드 그래프 DB**에 실시간 기록되고 Cypher 로 되읽는다.
 - 🖥️ **그래프 뷰어** — 기록된 Kùzu 그래프를 **별도 웹 프로젝트**로 시각화(로컬 포트, 외부 CDN 없는 SVG 포스 레이아웃).
+- 🛠️ **pdsa-cli** — AI 에이전트가 PDSA 루프를 실행/기록·조회하고 LLM 조언을 받는 공식 CLI. **Native AOT 단일 실행 파일**(Akka+Kùzu 포함, 검증 완료).
 - 🧪 **테스트** — `tests/AkkaGraphLoop.Tests`
   xUnit + Akka TestKit 으로 각 junction의 동작과 **사이클의 liveness(데드락 없음)** 를 검증(총 22개).
 
@@ -139,31 +140,59 @@ dotnet run --project src/AkkaGraphLoop.Viewer
 - 노드 클릭 시 우측 패널에 속성(품질/수렴 등) 표시, 드래그 이동, 새로고침·재배치 버튼.
 - 뷰어는 매 요청마다 DB 를 읽기 전용으로 열고 닫으므로, `-- pdsa` 를 다시 돌린 뒤 새로고침하면 최신 그래프가 보인다.
 
+## pdsa-cli — 공식 CLI 툴 (Native AOT)
+
+AI 에이전트가 PDSA 루프를 실행·기록하고, 그래프를 보고, LLM 조언을 받도록 지원하는 공식 CLI(`pdsa`).
+재사용 코어는 별도 라이브러리 **`AkkaGraphLoop.Core`**(PDSA 엔진 + Kùzu)로 추출했고, Samples·Viewer·CLI 가 공유한다.
+
+```bash
+pdsa run [--start 45] [--target 90]   # PDSA 루프 실행(Akka 스트림) + Kùzu 그래프 기록
+pdsa guide "<질문/상황>"               # OpenAI 로 PDSA 조언(기본 구현)
+pdsa view [--port 5099] [--no-open]    # 그래프 DB 뷰어 구동
+pdsa version                           # 버전/런타임 정보
+```
+
+### Native AOT 빌드 (검증 완료)
+
+```bash
+dotnet publish src/pdsa-cli -c Release -r win-x64
+# → bin/Release/net10.0/win-x64/publish/pdsa.exe (네이티브 단일 실행 + kuzu_shared.dll)
+```
+
+- **Akka.NET + Native AOT 동작 확인**: Akka 는 기본 `ActorSystem.Create(name)` 시 `System.Configuration.ConfigurationManager`(app.config)를
+  통해 설정을 읽는데, 이 경로가 AOT/single-file 에서 크래시한다(akka.net #4876/#7246). **명시적 Config(`ConfigurationFactory.Default()`)를
+  전달**해 그 경로를 우회하면 AOT 에서 정상 동작한다(`AkkaPdsaEngine` 참고).
+- 프리빌트 **Kùzu(C++) 는 P/Invoke** 로 이용(AOT 친화적), OpenAI 는 HttpClient + **소스젠 JSON**(AOT-safe).
+- `TrimmerRootAssembly` 로 Akka 어셈블리를 빌드에 통째로 포함.
+- 참고: 이 환경에서 AOT 링크에는 VS Build Tools(C++) 가 필요하며, `vswhere.exe` 경로(VS Installer 폴더)가 PATH 에 있어야 한다.
+
+### LLM(OpenAI) 설정
+
+`.secret/openai.json.tmp` 를 `.secret/openai.json` 으로 복사 후 `api_key` 를 채우거나, 환경변수
+`OPENAI_API_KEY`(+ `OPENAI_BASE_URL`, `OPENAI_MODEL`)를 설정한다. 실제 키 파일은 git 에 커밋되지 않는다.
+
 ## 구조
 
 ```
-src/AkkaGraphLoop.Samples/
-  Basics/GraphDslBasics.cs     # GraphDSL 기본 폐그래프
-  FanOut/FanOutSamples.cs      # Broadcast, Balance, UnZip
-  FanIn/FanInSamples.cs        # Merge*, Zip, ZipWith, Concat
-  Partial/PartialGraphSamples.cs  # UniformFanInShape, Source/Flow.FromGraph
-  Cycles/CycleSamples.cs       # 사이클 데드락과 3가지 해법
-  Pdsa/                        # 데밍 PDSA 지속개선 루프(피드백 사이클, -- pdsa)
-    PdsaLoop.cs                #   Plan/Do/Study/Act 사이클 + 실시간 그래프 기록 스테이지
-    PdsaGraphStore.cs          #   IPdsaGraphStore + Kùzu 구현(Cypher 기록)
-    PdsaGraphReader.cs         #   그래프 되읽기(뷰어용 노드/엣지 모델)
-    PdsaPaths.cs               #   샘플·뷰어가 공유하는 DB 고정 경로
-  Kuzu/                        # Kùzu 임베디드 그래프 DB 인터롭
+src/AkkaGraphLoop.Core/        # 공유 라이브러리(Samples·Viewer·CLI 가 참조)
+  Pdsa/                        #   데밍 PDSA 지속개선 루프(피드백 사이클)
+    PdsaLoop.cs                #     Plan/Do/Study/Act 사이클 + 실시간 그래프 기록 스테이지
+    PdsaGraphStore.cs          #     IPdsaGraphStore + Kùzu 구현(Cypher 기록)
+    PdsaGraphReader.cs         #     그래프 되읽기(뷰어용 노드/엣지 모델)
+    PdsaPaths.cs               #     공유 DB 고정 경로
+  Kuzu/                        #   Kùzu 임베디드 그래프 DB 인터롭
     KuzuNative.cs / KuzuGraph.cs  #   C API P/Invoke · 얇은 관리형 래퍼
-  Tui/                         # TUI 튜토리얼 모드
-    Pacer.cs                   #   흐름 속도 제어(5초/스텝)·일시정지·취소·노드 상태
-    Term.cs / Renderer.cs      #   ANSI 터미널 제어 · 프레임 렌더링
-    Scene.cs / Scenes.cs       #   장면 추상화 · 계측된 실제 그래프 + ASCII 다이어그램
-    TuiApp.cs                  #   장면 순차 실행 · 입력(ESC/Ctrl+C) 처리
+src/AkkaGraphLoop.Samples/     # 그래프 학습 샘플 + TUI 튜토리얼(-- pdsa 콘솔 포함)
+  Basics · FanOut · FanIn · Partial · Cycles · Tui/
 src/AkkaGraphLoop.Viewer/      # 그래프 뷰어(별도 웹 프로젝트, 로컬 포트)
-  Program.cs                   #   ASP.NET Core 최소 API: / 및 /api/graph
-  ViewerHtml.cs                #   자체 포함 HTML(vanilla JS + SVG 포스 레이아웃)
-native/Kuzu.targets            # libkuzu 네이티브 라이브러리 빌드시 자동 다운로드
+  Program.cs / ViewerHtml.cs   #   ASP.NET Core 최소 API + 자체 포함 SVG 뷰어
+src/pdsa-cli/                  # 공식 CLI 툴 pdsa (Native AOT)
+  Program.cs / Cli/            #   진입점 · 명령 라우터/인자 파서
+  Commands/                    #   run · guide · view · version
+  Engine/                      #   IPdsaEngine + AkkaPdsaEngine(Akka+Kùzu, AOT용 config 우회)
+  Llm/                         #   ILlmClient + OpenAiClient(소스젠 JSON) + 설정 로드
+  Viewer/ViewerLauncher.cs     #   뷰어 프로세스 구동 장치
+native/Kuzu.targets            # libkuzu 네이티브 라이브러리 빌드/게시시 자동 다운로드·포함
 tests/AkkaGraphLoop.Tests/
   FanInOutTests.cs / PartialGraphTests.cs / CycleTests.cs
   TuiSceneTests.cs / PdsaTests.cs / PdsaGraphStoreTests.cs

@@ -2,7 +2,7 @@ using System.Collections.Immutable;
 using Akka.Streams;
 using Akka.Streams.Dsl;
 
-namespace AkkaGraphLoop.Samples.Pdsa;
+namespace AkkaGraphLoop.Core.Pdsa;
 
 /// <summary>PDSA 사이클을 한 바퀴 도는 개선 상태.</summary>
 /// <param name="Iteration">사이클 회차(1부터).</param>

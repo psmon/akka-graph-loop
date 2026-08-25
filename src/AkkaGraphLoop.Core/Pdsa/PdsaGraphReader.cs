@@ -1,6 +1,6 @@
-using AkkaGraphLoop.Samples.Kuzu;
+using AkkaGraphLoop.Core.Kuzu;
 
-namespace AkkaGraphLoop.Samples.Pdsa;
+namespace AkkaGraphLoop.Core.Pdsa;
 
 /// <summary>그래프 노드(뷰어용 직렬화 모델).</summary>
 public sealed record GraphNode(string Id, string Label, string Kind, Dictionary<string, string> Props);
