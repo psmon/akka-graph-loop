@@ -8,10 +8,10 @@ namespace PdsaCli.Viewer;
 /// </summary>
 public static class ViewerLauncher
 {
-    public static async Task<int> LaunchAsync(int port, bool openBrowser, CancellationToken ct)
+    public static async Task<int> LaunchAsync(int port, string? dbPath, bool openBrowser, CancellationToken ct)
     {
         var url = $"http://localhost:{port}";
-        var psi = BuildStartInfo(port);
+        var psi = BuildStartInfo(port, dbPath);
         if (psi is null)
         {
             Console.Error.WriteLine("뷰어를 찾지 못했습니다(배포된 AkkaGraphLoop.Viewer 실행 파일 또는 개발 트리의 뷰어 프로젝트).");
@@ -34,21 +34,29 @@ public static class ViewerLauncher
         return proc.ExitCode;
     }
 
-    private static ProcessStartInfo? BuildStartInfo(int port)
+    private static ProcessStartInfo? BuildStartInfo(int port, string? dbPath)
     {
         // 1) 배포 시나리오: 실행 파일 옆의 뷰어 실행 파일
         var exeName = OperatingSystem.IsWindows() ? "AkkaGraphLoop.Viewer.exe" : "AkkaGraphLoop.Viewer";
         var sibling = Path.Combine(AppContext.BaseDirectory, exeName);
         if (File.Exists(sibling))
-            return new ProcessStartInfo(sibling) { ArgumentList = { "--port", port.ToString() } };
+        {
+            var psi = new ProcessStartInfo(sibling) { ArgumentList = { "--port", port.ToString() } };
+            if (dbPath is not null) { psi.ArgumentList.Add("--db"); psi.ArgumentList.Add(dbPath); }
+            return psi;
+        }
 
         // 2) 개발 트리: 상위로 올라가며 뷰어 프로젝트를 찾아 dotnet run
         var csproj = FindUp("src/AkkaGraphLoop.Viewer/AkkaGraphLoop.Viewer.csproj");
         if (csproj is not null)
-            return new ProcessStartInfo("dotnet")
+        {
+            var psi = new ProcessStartInfo("dotnet")
             {
                 ArgumentList = { "run", "--project", csproj, "--", "--port", port.ToString() },
             };
+            if (dbPath is not null) { psi.ArgumentList.Add("--db"); psi.ArgumentList.Add(dbPath); }
+            return psi;
+        }
 
         return null;
     }

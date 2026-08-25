@@ -12,9 +12,15 @@ Console.CancelKeyPress += (_, e) =>
 
 var router = new CommandRouter(new ICliCommand[]
 {
-    new RunCommand(),
-    new GuideCommand(),
+    new PlanCommand(),
+    new DoCommand(),
+    new StudyCommand(),
+    new ActCommand(),
+    new StatusCommand(),
     new ViewCommand(),
+    new ConfigCommand(),
+    new GuideCommand(),
+    new RunCommand(),
     new VersionCommand(),
 });
 

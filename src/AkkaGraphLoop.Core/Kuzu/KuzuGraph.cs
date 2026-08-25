@@ -34,10 +34,95 @@ public sealed class KuzuGraph : IDisposable
         kuzu_query_result_destroy(ref result);
     }
 
+    /// <summary>
+    /// 파라미터 바인딩으로 Cypher 를 실행한다(임의 텍스트를 이스케이프 없이 안전하게 처리).
+    /// 값 타입: <see cref="string"/> 또는 <see cref="long"/>/<see cref="int"/>. Cypher 에서는 <c>$name</c> 로 참조.
+    /// </summary>
+    public void Execute(string cypher, IReadOnlyDictionary<string, object> parameters)
+    {
+        var result = RunPrepared(cypher, parameters);
+        kuzu_query_result_destroy(ref result);
+    }
+
     /// <summary>Cypher 조회 결과를 행 단위 문자열 배열로 반환한다.</summary>
     public List<string[]> Query(string cypher, int columns)
     {
         RunChecked(cypher, out var result);
+        var rows = new List<string[]>();
+        try
+        {
+            while (kuzu_query_result_has_next(ref result) != 0)
+            {
+                kuzu_query_result_get_next(ref result, out var tuple);
+                var row = new string[columns];
+                for (var i = 0; i < columns; i++)
+                {
+                    kuzu_flat_tuple_get_value(ref tuple, (ulong)i, out var value);
+                    var ptr = kuzu_value_to_string(ref value);
+                    row[i] = Marshal.PtrToStringUTF8(ptr) ?? "";
+                    kuzu_destroy_string(ptr);
+                    kuzu_value_destroy(ref value);
+                }
+                rows.Add(row);
+            }
+        }
+        finally
+        {
+            kuzu_query_result_destroy(ref result);
+        }
+        return rows;
+    }
+
+    private QueryResult RunPrepared(string cypher, IReadOnlyDictionary<string, object> parameters)
+    {
+        ObjectDisposedException.ThrowIf(_disposed, this);
+        if (kuzu_connection_prepare(ref _conn, cypher, out var prepared) != Success ||
+            kuzu_prepared_statement_is_success(ref prepared) == 0)
+        {
+            var msg = Marshal.PtrToStringUTF8(kuzu_prepared_statement_get_error_message(ref prepared)) ?? "(알 수 없는 오류)";
+            kuzu_prepared_statement_destroy(ref prepared);
+            throw new InvalidOperationException($"Kùzu prepare 실패: {msg}\n  Cypher: {cypher}");
+        }
+
+        try
+        {
+            foreach (var (name, value) in parameters)
+            {
+                var state = value switch
+                {
+                    string s => kuzu_prepared_statement_bind_string(ref prepared, name, s),
+                    long l => kuzu_prepared_statement_bind_int64(ref prepared, name, l),
+                    int i => kuzu_prepared_statement_bind_int64(ref prepared, name, i),
+                    _ => throw new NotSupportedException($"지원하지 않는 파라미터 타입: {value?.GetType().Name}"),
+                };
+                if (state != Success)
+                    throw new InvalidOperationException($"Kùzu 파라미터 바인딩 실패: ${name}");
+            }
+
+            if (kuzu_connection_execute(ref _conn, ref prepared, out var result) != Success ||
+                kuzu_query_result_is_success(ref result) == 0)
+            {
+                var msg = Marshal.PtrToStringUTF8(kuzu_query_result_get_error_message(ref result)) ?? "(알 수 없는 오류)";
+                kuzu_query_result_destroy(ref result);
+                throw new InvalidOperationException($"Kùzu 실행 실패: {msg}\n  Cypher: {cypher}");
+            }
+            return result;
+        }
+        finally
+        {
+            kuzu_prepared_statement_destroy(ref prepared);
+        }
+    }
+
+    /// <summary>파라미터 바인딩 조회.</summary>
+    public List<string[]> Query(string cypher, int columns, IReadOnlyDictionary<string, object> parameters)
+    {
+        var result = RunPrepared(cypher, parameters);
+        return ReadRows(ref result, columns);
+    }
+
+    private static List<string[]> ReadRows(ref QueryResult result, int columns)
+    {
         var rows = new List<string[]>();
         try
         {

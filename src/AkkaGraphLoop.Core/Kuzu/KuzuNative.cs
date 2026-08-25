@@ -53,6 +53,9 @@ internal static class KuzuNative
     [StructLayout(LayoutKind.Sequential)]
     public struct Value { public IntPtr Handle; [MarshalAs(UnmanagedType.U1)] public bool OwnedByCpp; }
 
+    [StructLayout(LayoutKind.Sequential)]
+    public struct PreparedStatement { public IntPtr Statement; public IntPtr BoundValues; }
+
     [DllImport(Lib)] public static extern SystemConfig kuzu_default_system_config();
 
     [DllImport(Lib)] public static extern int kuzu_database_init(
@@ -77,4 +80,17 @@ internal static class KuzuNative
     [DllImport(Lib)] public static extern void kuzu_value_destroy(ref Value value);
 
     [DllImport(Lib)] public static extern void kuzu_destroy_string(IntPtr str);
+
+    // 파라미터 바인딩(임의 텍스트를 이스케이프 없이 안전하게 저장)
+    [DllImport(Lib)] public static extern int kuzu_connection_prepare(
+        ref Connection connection, [MarshalAs(UnmanagedType.LPUTF8Str)] string query, out PreparedStatement outStatement);
+    [DllImport(Lib)] public static extern byte kuzu_prepared_statement_is_success(ref PreparedStatement statement);
+    [DllImport(Lib)] public static extern IntPtr kuzu_prepared_statement_get_error_message(ref PreparedStatement statement);
+    [DllImport(Lib)] public static extern int kuzu_prepared_statement_bind_string(
+        ref PreparedStatement statement, [MarshalAs(UnmanagedType.LPUTF8Str)] string name, [MarshalAs(UnmanagedType.LPUTF8Str)] string value);
+    [DllImport(Lib)] public static extern int kuzu_prepared_statement_bind_int64(
+        ref PreparedStatement statement, [MarshalAs(UnmanagedType.LPUTF8Str)] string name, long value);
+    [DllImport(Lib)] public static extern int kuzu_connection_execute(
+        ref Connection connection, ref PreparedStatement statement, out QueryResult outResult);
+    [DllImport(Lib)] public static extern void kuzu_prepared_statement_destroy(ref PreparedStatement statement);
 }

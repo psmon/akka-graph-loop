@@ -142,14 +142,38 @@ dotnet run --project src/AkkaGraphLoop.Viewer
 
 ## pdsa-cli — 공식 CLI 툴 (Native AOT)
 
-AI 에이전트가 PDSA 루프를 실행·기록하고, 그래프를 보고, LLM 조언을 받도록 지원하는 공식 CLI(`pdsa`).
+**PDSA 루프 엔지니어를 지원하는 CLI.** AI 에이전트가 데밍의 PDSA 사이클을 수행하도록 코칭하고,
+각 단계를 **프로젝트별 그래프 DB에 누적**해 "AI 에이전트를 위한 진보된 메모리"를 만든다.
 재사용 코어는 별도 라이브러리 **`AkkaGraphLoop.Core`**(PDSA 엔진 + Kùzu)로 추출했고, Samples·Viewer·CLI 가 공유한다.
 
+### PDSA 워크플로 (한 사이클)
+
 ```bash
-pdsa run [--start 45] [--target 90]   # PDSA 루프 실행(Akka 스트림) + Kùzu 그래프 기록
-pdsa guide "<질문/상황>"               # OpenAI 로 PDSA 조언(기본 구현)
-pdsa view [--port 5099] [--no-open]    # 그래프 DB 뷰어 구동
-pdsa version                           # 버전/런타임 정보
+pdsa config --api-key <키> --model gpt-5.6-tera   # 최초 1회: LLM 설정(전역)
+pdsa plan  "<계획>"     # 계획 입력 → LLM 이 '가설'까지 세워 코칭(새 사이클 시작)
+pdsa do    "<수행한 것>" # 수행 보고 → Plan→Do 를 그래프로 정리
+pdsa study "<결과/관찰>" # 결과 보고 → 무엇을 배웠나(학습)·개선점 도출 (Check 아님)
+pdsa act                # 다음 개선 액션 코칭(사이클 종료) → 반영해 다음 plan 으로
+pdsa status             # 현재 프로젝트의 진행/누적 상태
+pdsa view               # 누적 그래프 메모리를 로컬 포트 뷰어로 시각화
+```
+
+- 대개 계획만 세우고 **가설을 빠뜨리므로**, `plan` 이 LLM 으로 검증 가능한 가설과 측정 지표를 세워준다.
+- 반복할수록 그래프에 학습이 누적되어, 매 실행이 **공정 자체를 개선하는 PDSA 철학**을 지원한다.
+- LLM 미설정 시에도 입력은 그래프에 **기록**되며 코칭만 생략된다(임의 텍스트는 파라미터 바인딩으로 안전 저장).
+
+### 프로젝트별 메모리 경로
+
+그래프 DB 는 **개인/앱/프로젝트별**로 분리 누적된다 — `{LocalAppData}/pdsa-cli/{project}/graph.kuzu`.
+`--project <이름>` 으로 지정하거나, 기본은 현재 작업 디렉터리 이름을 사용한다. 따라서 Claude Code 등에서
+어느 프로젝트든 이 CLI 로 지속개선을 수행하면 그 프로젝트 전용 메모리가 쌓인다.
+
+### 기타 명령
+
+```bash
+pdsa guide "<질문>"    # LLM 으로 PDSA 조언(단발)
+pdsa run               # PDSA 데모 루프(Akka 스트림) 실행 + Kùzu 기록
+pdsa version
 ```
 
 ### Native AOT 빌드 (검증 완료)
@@ -168,29 +192,39 @@ dotnet publish src/pdsa-cli -c Release -r win-x64
 
 ### LLM(OpenAI) 설정
 
-`.secret/openai.json.tmp` 를 `.secret/openai.json` 으로 복사 후 `api_key` 를 채우거나, 환경변수
-`OPENAI_API_KEY`(+ `OPENAI_BASE_URL`, `OPENAI_MODEL`)를 설정한다. 실제 키 파일은 git 에 커밋되지 않는다.
+우선순위: 환경변수 → 전역 설정(`{LocalAppData}/pdsa-cli/openai.json`, `pdsa config` 로 저장) → 레포 `.secret/openai.json`.
+기본 모델은 `gpt-5.6-tera`(설정 가능).
+
+```bash
+pdsa config --api-key <키> --model gpt-5.6-tera [--base-url <URL>]
+pdsa config                 # 현재 설정 표시(키 마스킹)
+# 또는 환경변수: OPENAI_API_KEY / OPENAI_MODEL / OPENAI_BASE_URL
+```
+
+실제 키 파일(`.secret/*.json`, 전역 설정)은 git 에 커밋되지 않는다.
 
 ## 구조
 
 ```
 src/AkkaGraphLoop.Core/        # 공유 라이브러리(Samples·Viewer·CLI 가 참조)
-  Pdsa/                        #   데밍 PDSA 지속개선 루프(피드백 사이클)
-    PdsaLoop.cs                #     Plan/Do/Study/Act 사이클 + 실시간 그래프 기록 스테이지
-    PdsaGraphStore.cs          #     IPdsaGraphStore + Kùzu 구현(Cypher 기록)
-    PdsaGraphReader.cs         #     그래프 되읽기(뷰어용 노드/엣지 모델)
-    PdsaPaths.cs               #     공유 DB 고정 경로
+  Pdsa/                        #   데밍 PDSA
+    PdsaLoop.cs                #     데모: Plan/Do/Study/Act 피드백 사이클(Akka) + 실시간 기록
+    PdsaWorkflow.cs            #     에이전트 워크플로 메모리(Project/Cycle/Phase, 파라미터 바인딩)
+    PdsaWorkflowReader.cs      #     워크플로 그래프 되읽기(뷰어용)
+    PdsaProjectPaths.cs        #     개인/앱/프로젝트별 그래프 DB 경로
+    PdsaGraphStore.cs / PdsaGraphReader.cs / PdsaPaths.cs  # 데모 스키마 저장/되읽기
   Kuzu/                        #   Kùzu 임베디드 그래프 DB 인터롭
-    KuzuNative.cs / KuzuGraph.cs  #   C API P/Invoke · 얇은 관리형 래퍼
+    KuzuNative.cs / KuzuGraph.cs  #   C API P/Invoke(prepared statement 포함) · 얇은 래퍼
 src/AkkaGraphLoop.Samples/     # 그래프 학습 샘플 + TUI 튜토리얼(-- pdsa 콘솔 포함)
   Basics · FanOut · FanIn · Partial · Cycles · Tui/
 src/AkkaGraphLoop.Viewer/      # 그래프 뷰어(별도 웹 프로젝트, 로컬 포트)
   Program.cs / ViewerHtml.cs   #   ASP.NET Core 최소 API + 자체 포함 SVG 뷰어
 src/pdsa-cli/                  # 공식 CLI 툴 pdsa (Native AOT)
   Program.cs / Cli/            #   진입점 · 명령 라우터/인자 파서
-  Commands/                    #   run · guide · view · version
-  Engine/                      #   IPdsaEngine + AkkaPdsaEngine(Akka+Kùzu, AOT용 config 우회)
-  Llm/                         #   ILlmClient + OpenAiClient(소스젠 JSON) + 설정 로드
+  Commands/                    #   plan·do·study·act·status·view·config·guide·run·version
+  Workflow/PdsaSession.cs      #   프로젝트 해석 + 워크플로 메모리 + 코치 컨텍스트
+  Engine/                      #   IPdsaEngine + AkkaPdsaEngine(데모 run, AOT용 config 우회)
+  Llm/                         #   ILlmClient + OpenAiClient(소스젠 JSON) + PdsaCoach + 설정
   Viewer/ViewerLauncher.cs     #   뷰어 프로세스 구동 장치
 native/Kuzu.targets            # libkuzu 네이티브 라이브러리 빌드/게시시 자동 다운로드·포함
 tests/AkkaGraphLoop.Tests/

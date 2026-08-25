@@ -39,9 +39,11 @@ internal static class ViewerHtml
   <h1>PDSA 그래프 뷰어</h1>
   <span class="sub">Kùzu 임베디드 그래프 DB · Deming PDSA</span>
   <div class="legend">
-    <span><span class="dot" style="background:#5b8cff"></span>Run</span>
-    <span><span class="dot" style="background:#8a94a8"></span>Cycle</span>
-    <span><span class="dot" style="background:#37c871"></span>수렴(Converged)</span>
+    <span><span class="dot" style="background:#5b8cff"></span>Project/Plan</span>
+    <span><span class="dot" style="background:#37c8c8"></span>Cycle</span>
+    <span><span class="dot" style="background:#37c871"></span>Do</span>
+    <span><span class="dot" style="background:#e6a53a"></span>Study</span>
+    <span><span class="dot" style="background:#a06cff"></span>Act</span>
   </div>
   <div class="spacer"></div>
   <button id="reload">↻ 새로고침</button>
@@ -100,8 +102,8 @@ function initGraph(data){
     byId[n.id]=o; return o;
   });
   edges=data.edges.map(e=>({...e, s:byId[e.from], t:byId[e.to]})).filter(e=>e.s&&e.t);
-  // Run 노드는 위쪽 중앙에 고정 배치
-  const run=nodes.find(n=>n.kind==="Run"); if(run){ run.x=W/2; run.y=90; }
+  // 루트 노드(Project/Run)는 위쪽 중앙에 고정 배치
+  const root=nodes.find(n=>n.kind==="Project"||n.kind==="Run"); if(root){ root.x=W/2; root.y=90; }
   startSim();
 }
 
@@ -119,13 +121,20 @@ function physics(){
   }
   for(const e of edges){ let dx=e.t.x-e.s.x, dy=e.t.y-e.s.y; let d=Math.sqrt(dx*dx+dy*dy)||0.01;
     const f=(d-spring)*0.02; const ux=dx/d, uy=dy/d; e.s.fx+=ux*f; e.s.fy+=uy*f; e.t.fx-=ux*f; e.t.fy-=uy*f; }
-  for(const n of nodes){ if(n===dragging) continue; if(n.kind==="Run"){ continue; }
+  for(const n of nodes){ if(n===dragging) continue; if(n.kind==="Run"||n.kind==="Project"){ continue; }
     n.vx=(n.vx+n.fx)*0.85; n.vy=(n.vy+n.fy)*0.85; n.x+=n.vx; n.y+=n.vy;
     n.x=Math.max(40,Math.min(W-40,n.x)); n.y=Math.max(40,Math.min(H-40,n.y)); }
 }
 
 function clear(g){ while(g.firstChild) g.removeChild(g.firstChild); }
 function el(name,attrs){ const e=document.createElementNS(SVG,name); for(const k in attrs) e.setAttribute(k,attrs[k]); return e; }
+function nodeColor(n){
+  if(n.kind==="Project"||n.kind==="Run") return "#5b8cff";
+  if(n.kind==="Cycle") return "#37c8c8";
+  if(n.kind==="Phase"){ const k=((n.props&&n.props.kind)||"").toLowerCase();
+    return {plan:"#5b8cff",do:"#37c871",study:"#e6a53a",act:"#a06cff"}[k]||"#8a94a8"; }
+  return "#8a94a8";
+}
 
 function render(){
   clear(gEdges); clear(gEdgeLabels); clear(gNodes); clear(gLabels);
@@ -137,16 +146,19 @@ function render(){
     const t=el("text",{x:mx,y:my-4,"text-anchor":"middle",class:"edge-label"}); t.textContent=e.type; gEdgeLabels.appendChild(t);
   }
   for(const n of nodes){
-    let shape;
-    if(n.kind==="Run"){
-      shape=el("rect",{x:n.x-38,y:n.y-18,width:76,height:36,rx:8,fill:"#5b8cff",stroke:"#a9c6ff","stroke-width":1.5});
-    } else {
-      const r=n.converged?24:20;
-      shape=el("circle",{cx:n.x,cy:n.y,r:r,fill:n.converged?"#37c871":"#8a94a8",stroke:n.converged?"#b9f7d2":"#c3cad8","stroke-width":1.5});
+    const color=nodeColor(n);
+    let shape, labelDy;
+    if(n.kind==="Run"||n.kind==="Project"){
+      shape=el("rect",{x:n.x-40,y:n.y-18,width:80,height:36,rx:8,fill:color,stroke:"#a9c6ff","stroke-width":1.5}); labelDy=4;
+    } else if(n.kind==="Cycle"){
+      const r=n.converged?24:21;
+      shape=el("circle",{cx:n.x,cy:n.y,r:r,fill:n.converged?"#37c871":color,stroke:"#c3cad8","stroke-width":1.5}); labelDy=r+16;
+    } else { // Phase (또는 기타): 작은 원
+      shape=el("circle",{cx:n.x,cy:n.y,r:14,fill:color,stroke:"#c3cad8","stroke-width":1.2}); labelDy=28;
     }
     shape.style.cursor="grab"; shape.addEventListener("mousedown",ev=>startDrag(ev,n)); shape.addEventListener("click",()=>showPanel(n));
     gNodes.appendChild(shape);
-    const label=el("text",{x:n.x,y:n.kind==="Run"?n.y+4:n.y+ (n.converged?40:36),"text-anchor":"middle",class:"node-label"});
+    const label=el("text",{x:n.x,y:n.y+labelDy,"text-anchor":"middle",class:"node-label"});
     label.textContent=n.label; gLabels.appendChild(label);
   }
 }
@@ -165,7 +177,7 @@ function startDrag(ev,n){ dragging=n; cancelAnimationFrame(raf);
 }
 
 document.getElementById("reload").addEventListener("click",load);
-document.getElementById("relayout").addEventListener("click",()=>{ if(nodes.length){ nodes.forEach((n,i)=>{const a=2*Math.PI*i/nodes.length; n.x=W/2+Math.cos(a)*160; n.y=H/2+Math.sin(a)*140; n.vx=n.vy=0;}); const run=nodes.find(n=>n.kind==="Run"); if(run){run.x=W/2;run.y=90;} startSim(); }});
+document.getElementById("relayout").addEventListener("click",()=>{ if(nodes.length){ nodes.forEach((n,i)=>{const a=2*Math.PI*i/nodes.length; n.x=W/2+Math.cos(a)*160; n.y=H/2+Math.sin(a)*140; n.vx=n.vy=0;}); const root=nodes.find(n=>n.kind==="Project"||n.kind==="Run"); if(root){root.x=W/2;root.y=90;} startSim(); }});
 load();
 </script>
 </body>

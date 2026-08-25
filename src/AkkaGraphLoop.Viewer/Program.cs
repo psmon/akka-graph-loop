@@ -1,8 +1,10 @@
 using AkkaGraphLoop.Core.Pdsa;
 using AkkaGraphLoop.Viewer;
 
-// 인자: --db <경로> (기본: PdsaPaths.DefaultDbPath), --port <번호> (기본: 5099)
-var dbPath = GetArg(args, "--db") ?? PdsaPaths.DefaultDbPath;
+// 인자: --db <경로> | --project <이름> (기본: 데모 DB), --port <번호> (기본: 5099)
+var project = GetArg(args, "--project");
+var dbPath = GetArg(args, "--db")
+             ?? (project is not null ? PdsaProjectPaths.GraphDbFor(project) : PdsaPaths.DefaultDbPath);
 var port = int.TryParse(GetArg(args, "--port"), out var p) ? p : 5099;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -17,9 +19,14 @@ app.MapGet("/", () => Results.Content(ViewerHtml.Page, "text/html; charset=utf-8
 app.MapGet("/api/graph", () =>
 {
     if (!PdsaPaths.Exists(dbPath))
-        return Results.Json(new { error = $"Kùzu DB 가 없습니다: {dbPath}. 먼저 `dotnet run --project src/AkkaGraphLoop.Samples -- pdsa` 로 데이터를 생성하세요." });
+        return Results.Json(new { error = $"그래프 DB 가 없습니다: {dbPath}. 먼저 `pdsa plan ...`(워크플로) 또는 `-- pdsa`(데모) 로 데이터를 생성하세요." });
     try
     {
+        // 워크플로 스키마(Project/Cycle/Phase)면 그것을, 아니면 데모 스키마(Run/Cycle)를 읽는다.
+        using (var wf = new PdsaWorkflowReader(dbPath))
+            if (wf.HasWorkflowSchema())
+                return Results.Json(wf.Read());
+
         using var reader = new KuzuPdsaReader(dbPath);
         return Results.Json(reader.Read());
     }
