@@ -57,6 +57,9 @@ public sealed class CommandRouter
         Console.WriteLine("반복할수록 그래프 DB(프로젝트별)에 학습이 누적되어, 공정 자체를 개선하는");
         Console.WriteLine("PDSA 철학을 지원하고 AI 에이전트를 위한 '진보된 메모리'가 됩니다.");
         Console.WriteLine();
+        Console.WriteLine("멀티프로젝트: `pdsa project set <이름>` 으로 활성 프로젝트를 지정하면 이후 모든");
+        Console.WriteLine("명령이 그 프로젝트 전용 그래프 DB 를 참조합니다(목록: `pdsa project list`).");
+        Console.WriteLine();
         Console.WriteLine("사용법: pdsa <명령> [옵션]");
         Console.WriteLine();
         Console.WriteLine("명령:");

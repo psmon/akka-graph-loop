@@ -32,7 +32,8 @@ public sealed class PdsaSession : IDisposable
 
     public static PdsaSession Open(string[] args)
     {
-        var project = ArgUtil.Option(args, "--project") ?? PdsaProjectPaths.CurrentProjectName();
+        // 우선순위: --project 인자 → 활성 프로젝트(set) → 현재 디렉터리 이름
+        var project = PdsaProjectPaths.ResolveProject(ArgUtil.Option(args, "--project"));
         var dbPath = PdsaProjectPaths.GraphDbFor(project);
         var workflow = new PdsaWorkflow(dbPath, project);
 

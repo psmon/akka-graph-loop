@@ -163,11 +163,20 @@ pdsa view               # 누적 그래프 메모리를 로컬 포트 뷰어로 
 - 반복할수록 그래프에 학습이 누적되어, 매 실행이 **공정 자체를 개선하는 PDSA 철학**을 지원한다.
 - LLM 미설정 시에도 입력은 그래프에 **기록**되며 코칭만 생략된다(임의 텍스트는 파라미터 바인딩으로 안전 저장).
 
-### 프로젝트별 메모리 경로
+### 멀티프로젝트 (프로젝트별 DB 분리)
 
 그래프 DB 는 **개인/앱/프로젝트별**로 분리 누적된다 — `{LocalAppData}/pdsa-cli/{project}/graph.kuzu`.
-`--project <이름>` 으로 지정하거나, 기본은 현재 작업 디렉터리 이름을 사용한다. 따라서 Claude Code 등에서
-어느 프로젝트든 이 CLI 로 지속개선을 수행하면 그 프로젝트 전용 메모리가 쌓인다.
+활성 프로젝트를 지정하면 이후 모든 명령이 그 프로젝트 전용 DB 를 참조한다(여러 프로젝트 동시 운영 가능).
+
+```bash
+pdsa project set <이름>   # 활성 프로젝트 지정(영속) → 이후 명령이 이 DB 를 참조
+pdsa project list         # 프로젝트 목록 + 사이클 수(활성은 *)
+pdsa project show         # 현재 활성 프로젝트/DB 경로
+pdsa project clear        # 지정 해제(현재 디렉터리 이름으로 복귀)
+```
+
+프로젝트 결정 우선순위: **`--project <이름>`(일회성) → 활성 프로젝트(set) → 현재 작업 디렉터리 이름**.
+따라서 Claude Code 등에서 프로젝트를 전환하며 각 프로젝트 전용 메모리를 쌓을 수 있다.
 
 ### 기타 명령
 
@@ -232,7 +241,7 @@ src/AkkaGraphLoop.Viewer/      # 그래프 뷰어(별도 웹 프로젝트, 로�
   Program.cs / ViewerHtml.cs   #   ASP.NET Core 최소 API + 자체 포함 SVG 뷰어
 src/pdsa-cli/                  # 공식 CLI 툴 pdsa (Native AOT)
   Program.cs / Cli/            #   진입점 · 명령 라우터/인자 파서
-  Commands/                    #   plan·do·study·act·status·view·config·guide·run·version
+  Commands/                    #   plan·do·study·act·status·project·view·config·check·models·guide·run·version
   Workflow/PdsaSession.cs      #   프로젝트 해석 + 워크플로 메모리 + 코치 컨텍스트
   Engine/                      #   IPdsaEngine + AkkaPdsaEngine(데모 run, AOT용 config 우회)
   Llm/                         #   ILlmClient + OpenAiClient(소스젠 JSON) + PdsaCoach + 설정

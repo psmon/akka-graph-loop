@@ -16,7 +16,7 @@ public sealed class ViewCommand : ICliCommand
         if (ArgUtil.Flag(args, "--help")) { Console.WriteLine(Usage); return 0; }
 
         var port = ArgUtil.Int(args, "--port", 5099);
-        var project = ArgUtil.Option(args, "--project") ?? PdsaProjectPaths.CurrentProjectName();
+        var project = PdsaProjectPaths.ResolveProject(ArgUtil.Option(args, "--project"));
         var dbPath = PdsaProjectPaths.GraphDbFor(project);
         var openBrowser = !ArgUtil.Flag(args, "--no-open");
 

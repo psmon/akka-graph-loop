@@ -24,6 +24,17 @@ public sealed class PdsaWorkflowReader : IDisposable
         catch { return false; }
     }
 
+    /// <summary>누적 사이클 수(목록 표시용).</summary>
+    public int CycleCount()
+    {
+        try
+        {
+            var rows = _graph.Query("MATCH (c:Cycle) RETURN count(c)", 1);
+            return rows.Count > 0 && int.TryParse(rows[0][0], out var n) ? n : 0;
+        }
+        catch { return 0; }
+    }
+
     public PdsaGraphModel Read()
     {
         var nodes = new List<GraphNode>();
