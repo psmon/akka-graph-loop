@@ -42,7 +42,18 @@ public static class OpenAiConfig
             return false;
         }
 
-        // OAuth: 키 요구 대신 access token 존재만 확인(획득/갱신은 사이클 C).
+        // Codex(GPT 구독): ~/.codex/auth.json 의 토큰을 재사용. 키 불필요.
+        if (options.Auth == AuthMode.Codex)
+        {
+            if (Codex.Load() is not null) { error = ""; return true; }
+            error =
+                $"Codex 인증을 찾을 수 없습니다: {Codex.AuthPath()}\n" +
+                "  공식 Codex CLI 로 로그인하세요: codex login   (ChatGPT Plus/Pro/Team/Enterprise 구독)\n" +
+                "  또는 API 키 사용: pdsa config auth apikey";
+            return false;
+        }
+
+        // OAuth: 키 요구 대신 access token 존재만 확인.
         if (options.Auth == AuthMode.OAuth)
         {
             if (!string.IsNullOrWhiteSpace(options.OAuth?.AccessToken)) { error = ""; return true; }
@@ -154,12 +165,14 @@ public static class OpenAiConfig
             // access token 이 있거나, refresh_token + token_endpoint 로 갱신 가능하면 설정된 것으로 본다.
             AuthMode.OAuth => !string.IsNullOrWhiteSpace(o.OAuth?.AccessToken)
                 || (!string.IsNullOrWhiteSpace(o.OAuth?.RefreshToken) && !string.IsNullOrWhiteSpace(o.OAuth?.TokenEndpoint)),
+            AuthMode.Codex => Codex.Load() is not null,
             _ => !string.IsNullOrWhiteSpace(o.ApiKey) && !o.ApiKey.StartsWith(PlaceholderPrefix),
         };
         var authLabel = o.Auth switch
         {
             AuthMode.None => "none(키리스)",
             AuthMode.OAuth => "oauth",
+            AuthMode.Codex => "codex(GPT 구독)",
             _ => "apikey",
         };
         return (o.BaseUrl, Mask(o.ApiKey), o.Model, o.ReasoningEffort ?? "(모델 기본)", authLabel, KeySource(), configured);
@@ -226,8 +239,17 @@ public static class OpenAiConfig
     {
         "none" => AuthMode.None,
         "oauth" => AuthMode.OAuth,
+        "codex" => AuthMode.Codex,
         _ => AuthMode.ApiKey, // "apikey"/null/미상 → 기본
     };
+
+    /// <summary>Codex(GPT 구독) 모드로 전환: auth_mode=codex + Codex base_url/model 기본값.</summary>
+    public static string SetCodex() => Update(o =>
+    {
+        o["auth_mode"] = "codex";
+        o["base_url"] = Codex.DefaultBaseUrl;
+        o["model"] = Codex.DefaultModel;
+    });
 
     private static string? ReadRepoString(string? repoPath, string name)
     {

@@ -13,7 +13,7 @@ public sealed class ConfigCommand : ICliCommand
     public string Summary => "LLM 키/모델 설정(분리) — 키 직접 또는 파일 위치";
     public string Usage =>
         "pdsa config key <키> | key-file <파일> | model <모델> | reasoning <none|low|medium|high|xhigh|max> | base-url <URL> "
-        + "| provider <local|openai-compat [URL]|openai> | auth <apikey|oauth|none> | allow-insecure-no-auth <true|false> "
+        + "| provider <local|openai-compat [URL]|openai> | auth <apikey|oauth|none|codex> | allow-insecure-no-auth <true|false> "
         + "| oauth <endpoint|device-endpoint|client|refresh-token|refresh-token-file> <값> | login | lang <en|ko|auto> | show";
 
     public async Task<int> RunAsync(string[] args, CancellationToken ct)
@@ -68,9 +68,15 @@ public sealed class ConfigCommand : ICliCommand
                 break;
             }
             case "auth":
-                if (value is not ("apikey" or "oauth" or "none"))
-                    return Fail("사용법: pdsa config auth <apikey|oauth|none>");
-                Console.WriteLine($"저장됨(auth={value}): {OpenAiConfig.SetAuthMode(ParseAuth(value))}");
+                if (value is not ("apikey" or "oauth" or "none" or "codex"))
+                    return Fail("사용법: pdsa config auth <apikey|oauth|none|codex>");
+                if (value is "codex")
+                {
+                    Console.WriteLine($"저장됨(auth=codex, GPT 구독): {OpenAiConfig.SetCodex()}");
+                    Console.WriteLine("  Codex CLI 로그인 필요: codex login  (ChatGPT Plus/Pro/Team/Enterprise)");
+                }
+                else
+                    Console.WriteLine($"저장됨(auth={value}): {OpenAiConfig.SetAuthMode(ParseAuth(value))}");
                 break;
             case "lang":
                 if (value is not ("en" or "ko" or "auto"))

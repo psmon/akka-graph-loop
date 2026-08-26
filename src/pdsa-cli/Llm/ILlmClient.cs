@@ -5,8 +5,10 @@ public enum AuthMode
 {
     /// <summary>정적 Bearer API 키(기존 동작).</summary>
     ApiKey,
-    /// <summary>OAuth access token(만료 시 갱신). 현재 스텁 — 사이클 C에서 구현.</summary>
+    /// <summary>OAuth access token(만료 시 갱신).</summary>
     OAuth,
+    /// <summary>Codex(ChatGPT 구독) OAuth. ~/.codex/auth.json 재사용 + Responses API.</summary>
+    Codex,
     /// <summary>무인증. 키리스 로컬 오픈웨이트(ollama/vLLM/LM Studio)용. 사설대역만 자동 허용.</summary>
     None,
 }

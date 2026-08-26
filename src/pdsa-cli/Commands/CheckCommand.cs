@@ -24,7 +24,7 @@ public sealed class CheckCommand : ICliCommand
         var (url, masked, model, reasoning, auth, source, _) = OpenAiConfig.Describe();
         Console.WriteLine($"LLM 호출 확인 중… base_url={url}  model={model}  auth={auth}  reasoning={reasoning}  key={masked} ({source})");
 
-        using var llm = new OpenAiClient(options);
+        var llm = LlmClientFactory.Create(options);
         var sw = Stopwatch.StartNew();
         try
         {
@@ -41,6 +41,10 @@ public sealed class CheckCommand : ICliCommand
             Console.Error.WriteLine($"✘ 실패 ({sw.ElapsedMilliseconds}ms): {ex.Message}");
             Console.Error.WriteLine("  모델명이 base_url 엔드포인트에 존재하는지 확인하세요: pdsa config model <모델>");
             return 1;
+        }
+        finally
+        {
+            (llm as IDisposable)?.Dispose();
         }
     }
 

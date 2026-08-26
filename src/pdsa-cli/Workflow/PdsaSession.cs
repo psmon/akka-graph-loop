@@ -18,9 +18,9 @@ public sealed class PdsaSession : IDisposable
     public bool LlmConfigured { get; }
     public string? LlmNote { get; }
 
-    private readonly OpenAiClient? _llm;
+    private readonly ILlmClient? _llm;
 
-    private PdsaSession(string project, string dbPath, string lang, PdsaWorkflow workflow, PdsaCoach coach, OpenAiClient? llm, string? note)
+    private PdsaSession(string project, string dbPath, string lang, PdsaWorkflow workflow, PdsaCoach coach, ILlmClient? llm, string? note)
     {
         Project = project;
         DbPath = dbPath;
@@ -40,10 +40,10 @@ public sealed class PdsaSession : IDisposable
         var workflow = new PdsaWorkflow(dbPath, project);
         var lang = PdsaLang.Resolve(args);   // 기록/코칭 언어
 
-        OpenAiClient? llm = null;
+        ILlmClient? llm = null;
         string? note = null;
         if (OpenAiConfig.TryLoad(out var options, out var error))
-            llm = new OpenAiClient(options);
+            llm = LlmClientFactory.Create(options);
         else
             note = error;
 
@@ -52,7 +52,7 @@ public sealed class PdsaSession : IDisposable
 
     public void Dispose()
     {
-        _llm?.Dispose();
+        (_llm as IDisposable)?.Dispose();
         Workflow.Dispose();
     }
 }
