@@ -21,8 +21,8 @@ public sealed class CheckCommand : ICliCommand
             return 3;
         }
 
-        var (url, masked, model, reasoning, source, _) = OpenAiConfig.Describe();
-        Console.WriteLine($"LLM 호출 확인 중… base_url={url}  model={model}  reasoning={reasoning}  key={masked} ({source})");
+        var (url, masked, model, reasoning, auth, source, _) = OpenAiConfig.Describe();
+        Console.WriteLine($"LLM 호출 확인 중… base_url={url}  model={model}  auth={auth}  reasoning={reasoning}  key={masked} ({source})");
 
         using var llm = new OpenAiClient(options);
         var sw = Stopwatch.StartNew();

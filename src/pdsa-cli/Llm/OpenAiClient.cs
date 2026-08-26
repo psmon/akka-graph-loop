@@ -27,12 +27,16 @@ public sealed class OpenAiClient : ILlmClient, IDisposable
 {
     private readonly HttpClient _http;
     private readonly LlmOptions _options;
+    private readonly IAuthProvider _auth;
 
-    public OpenAiClient(LlmOptions options)
+    public OpenAiClient(LlmOptions options) : this(options, AuthProviders.Create(options)) { }
+
+    /// <summary>인증 전략을 직접 주입(테스트용 fake <see cref="IAuthProvider"/> 등).</summary>
+    public OpenAiClient(LlmOptions options, IAuthProvider auth)
     {
         _options = options;
+        _auth = auth;
         _http = new HttpClient { BaseAddress = new Uri(options.BaseUrl.TrimEnd('/') + "/") };
-        _http.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", options.ApiKey);
         _http.Timeout = TimeSpan.FromSeconds(60);
     }
 
@@ -46,7 +50,9 @@ public sealed class OpenAiClient : ILlmClient, IDisposable
 
         var json = JsonSerializer.Serialize(request, OpenAiJsonContext.Default.ChatRequest);
         using var content = new StringContent(json, Encoding.UTF8, "application/json");
-        using var resp = await _http.PostAsync("chat/completions", content, ct);
+        using var msg = new HttpRequestMessage(HttpMethod.Post, "chat/completions") { Content = content };
+        msg.Headers.Authorization = await _auth.GetHeaderAsync(ct);
+        using var resp = await _http.SendAsync(msg, ct);
         var body = await resp.Content.ReadAsStringAsync(ct);
         if (!resp.IsSuccessStatusCode)
             throw new InvalidOperationException($"OpenAI 요청 실패({(int)resp.StatusCode}): {Truncate(body, 500)}");
@@ -65,7 +71,9 @@ public sealed class OpenAiClient : ILlmClient, IDisposable
     /// <summary>지원 모델 id 목록을 조회한다(GET /models).</summary>
     public async Task<IReadOnlyList<string>> ListModelsAsync(CancellationToken ct = default)
     {
-        using var resp = await _http.GetAsync("models", ct);
+        using var msg = new HttpRequestMessage(HttpMethod.Get, "models");
+        msg.Headers.Authorization = await _auth.GetHeaderAsync(ct);
+        using var resp = await _http.SendAsync(msg, ct);
         var body = await resp.Content.ReadAsStringAsync(ct);
         if (!resp.IsSuccessStatusCode)
             throw new InvalidOperationException($"모델 목록 조회 실패({(int)resp.StatusCode}): {Truncate(body, 500)}");
