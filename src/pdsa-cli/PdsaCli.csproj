@@ -25,6 +25,11 @@
   </ItemGroup>
 
   <ItemGroup>
+    <!-- 테스트 어셈블리에 internal 멤버(예: OpenAiConfig.Mask) 노출 -->
+    <InternalsVisibleTo Include="AkkaGraphLoop.Tests" />
+  </ItemGroup>
+
+  <ItemGroup>
     <!-- 빌드시 Akka 어셈블리를 통째로 포함(AOT/트림 제거 방지) -->
     <TrimmerRootAssembly Include="Akka" />
     <TrimmerRootAssembly Include="Akka.Streams" />

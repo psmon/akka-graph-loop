@@ -23,6 +23,9 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\AkkaGraphLoop.Samples\AkkaGraphLoop.Samples.csproj" />
+    <!-- pdsa-cli 자체(Cli/Llm 등 순수 로직)를 유닛 테스트하기 위한 참조. Exe 참조 가능;
+         PublishAot 는 publish 에서만 작동하므로 dotnet test 빌드에는 영향 없음. -->
+    <ProjectReference Include="..\..\src\pdsa-cli\PdsaCli.csproj" />
   </ItemGroup>
 
   <!-- Kùzu 네이티브 라이브러리를 테스트 출력 폴더에도 준비 -->

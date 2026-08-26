@@ -187,7 +187,7 @@ public static class OpenAiConfig
         return null;
     }
 
-    private static string Mask(string key)
+    internal static string Mask(string key)
     {
         if (string.IsNullOrEmpty(key)) return "(미설정)";
         if (key.Length <= 8) return "****";
