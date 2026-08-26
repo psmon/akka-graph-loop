@@ -31,6 +31,16 @@
   </ItemGroup>
 
   <ItemGroup>
+    <!-- `pdsa init` 이 설치하는 스킬 문서를 실행 파일에 임베드(AOT-safe 매니페스트 리소스).
+         SDK 기본 glob 이 .md 를 None 으로 잡으므로 먼저 제거 후 EmbeddedResource 로 포함. -->
+    <None Remove="Resources\SKILL.en.md" />
+    <None Remove="Resources\SKILL.ko.md" />
+    <!-- WithCulture=false: .en/.ko 를 문화권으로 오인(위성 어셈블리로 분리)하지 않도록 강제. LogicalName 으로 고정 이름. -->
+    <EmbeddedResource Include="Resources\SKILL.en.md" WithCulture="false" LogicalName="SKILL.en.md" />
+    <EmbeddedResource Include="Resources\SKILL.ko.md" WithCulture="false" LogicalName="SKILL.ko.md" />
+  </ItemGroup>
+
+  <ItemGroup>
     <!-- 테스트 어셈블리에 internal 멤버(예: OpenAiConfig.Mask) 노출 -->
     <InternalsVisibleTo Include="AkkaGraphLoop.Tests" />
   </ItemGroup>
