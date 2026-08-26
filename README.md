@@ -192,6 +192,9 @@ dotnet run --project src/AkkaGraphLoop.Viewer
 이렇게 만든 스킬(`.claude/skills/...`)이 있으면, 이후 유사 작업마다 에이전트가 자동으로 PDSA 사이클을
 돌리고 그래프 메모리에 학습을 누적한다. (이 저장소 자체도 이 CLI 로 지속개선을 수행할 예정이다.)
 
+> ✅ **바로 쓰는 스킬 포함**: 이 저장소에는 `.claude/skills/pdsa/SKILL.md` 스킬이 이미 들어 있다.
+> Claude Code 새 세션에서 "pdsa" 또는 "지속개선/회고" 를 언급하면 이 스킬이 트리거되어 위 절차대로 동작한다.
+
 ### PDSA 워크플로 (한 사이클)
 
 ```bash
