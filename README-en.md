@@ -2,6 +2,8 @@
 
 **[한국어](README.md) · [English](README-en.md)**
 
+![The moment the PDSA loop becomes a graph — @webnori/pdsa](docs/pdsa-graph.png)
+
 ## 🛠️ `pdsa` — a PDSA × graph-engineering support tool
 
 ```bash
@@ -131,6 +133,8 @@ The recorded Kùzu graph is visualized by a **separate web project** (`AkkaGraph
 Core minimal API reads the DB (read-only) and serves `/api/graph` JSON, drawn by self-contained HTML
 (vanilla JS + SVG force layout). It supports a project switcher, Study nodes colored by verdict
 (met/partial/unmet), `REINFORCES` edges, and an expectation hit-rate badge.
+
+![pdsa view — project switcher, verdict-colored Study nodes, REINFORCES edge, hit-rate badge](docs/pdsa-view.png)
 
 ```bash
 dotnet run --project src/pdsa-cli -- view   # or the installed: pdsa view

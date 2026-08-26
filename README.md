@@ -2,6 +2,8 @@
 
 **[한국어](README.md) · [English](README-en.md)**
 
+![PDSA 루프가 그래프가 되는 순간 — @webnori/pdsa](docs/pdsa-graph.png)
+
 ## 🛠️ `pdsa` — PDSA × 그래프 엔지니어링 서포트 툴
 
 ```bash
@@ -143,6 +145,11 @@ git 에는 바이너리를 커밋하지 않으며 첫 빌드에만 네트워크�
 기록된 Kùzu 그래프를 **분리된 웹 프로젝트**(`AkkaGraphLoop.Viewer`)에서 시각화한다.
 ASP.NET Core 최소 API 가 DB 를 읽어(읽기 전용) `/api/graph` JSON 으로 제공하고, 외부 CDN 없는
 자체 포함 HTML(vanilla JS + SVG 포스 레이아웃)로 그래프를 그린다.
+
+![pdsa view 실제 화면 — 프로젝트 선택, Study 판정색, REINFORCES 엣지, 기대충족률 뱃지](docs/pdsa-view.png)
+
+> `pdsa view` 실제 화면: 헤더의 프로젝트 드롭다운·기대충족률 뱃지, Study 노드의 판정색
+> (met=초록·partial=주황·unmet=빨강), 보강 사이클을 잇는 `REINFORCES` 엣지가 함께 보인다.
 
 ```bash
 # 1) 데이터 생성(고정 경로에 기록)
