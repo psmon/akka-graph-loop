@@ -13,7 +13,7 @@ public sealed class ConfigCommand : ICliCommand
     public string Summary => "LLM 키/모델 설정(분리) — 키 직접 또는 파일 위치";
     public string Usage =>
         "pdsa config key <키> | key-file <파일> | model <모델> | reasoning <none|low|medium|high|xhigh|max> | base-url <URL> "
-        + "| provider <local|openai-compat [URL]|openai> | auth <apikey|oauth|none|codex> | allow-insecure-no-auth <true|false> "
+        + "| provider <local|openai-compat [URL]|openai> | auth <apikey|oauth|none|codex|claude-cli> | claude-cli-path <경로> | allow-insecure-no-auth <true|false> "
         + "| oauth <endpoint|device-endpoint|client|refresh-token|refresh-token-file> <값> | login | lang <en|ko|auto> | show";
 
     public async Task<int> RunAsync(string[] args, CancellationToken ct)
@@ -68,15 +68,27 @@ public sealed class ConfigCommand : ICliCommand
                 break;
             }
             case "auth":
-                if (value is not ("apikey" or "oauth" or "none" or "codex"))
-                    return Fail("사용법: pdsa config auth <apikey|oauth|none|codex>");
+                if (value is not ("apikey" or "oauth" or "none" or "codex" or "claude-cli"))
+                    return Fail("사용법: pdsa config auth <apikey|oauth|none|codex|claude-cli>");
                 if (value is "codex")
                 {
                     Console.WriteLine($"저장됨(auth=codex, GPT 구독): {OpenAiConfig.SetCodex()}");
                     Console.WriteLine("  Codex CLI 로그인 필요: codex login  (ChatGPT Plus/Pro/Team/Enterprise)");
                 }
+                else if (value is "claude-cli")
+                {
+                    Console.WriteLine($"저장됨(auth=claude-cli): {OpenAiConfig.SetClaudeCli()}");
+                    Console.WriteLine(ClaudeCli.IsAvailable()
+                        ? "  이미 로그인된 Claude Code(`claude -p`)를 그대로 사용합니다(별도 토큰 불필요)."
+                        : "  주의: `claude` 를 PATH 에서 못 찾았습니다. 설치/로그인 후 `pdsa check`.");
+                }
                 else
                     Console.WriteLine($"저장됨(auth={value}): {OpenAiConfig.SetAuthMode(ParseAuth(value))}");
+                break;
+            case "claude-cli-path":
+                if (string.IsNullOrWhiteSpace(value)) return Fail("사용법: pdsa config claude-cli-path <경로>");
+                if (!File.Exists(value)) Console.WriteLine($"주의: 파일이 아직 없습니다: {value}");
+                Console.WriteLine($"저장됨(claude-cli-path): {OpenAiConfig.SetClaudeCliPath(value)}");
                 break;
             case "lang":
                 if (value is not ("en" or "ko" or "auto"))

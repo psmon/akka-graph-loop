@@ -42,6 +42,17 @@ public static class OpenAiConfig
             return false;
         }
 
+        // Claude Code CLI(claude -p): 이미 로그인된 Claude 를 서브프로세스로 사용. 키/토큰 설정 불필요.
+        if (options.Auth == AuthMode.ClaudeCli)
+        {
+            if (ClaudeCli.IsAvailable()) { error = ""; return true; }
+            error =
+                "Claude Code CLI(`claude`)를 찾을 수 없습니다.\n" +
+                "  공식 Claude Code 를 설치·로그인한 뒤 사용하세요(별도 토큰 설정 불필요).\n" +
+                "  경로 지정: pdsa config claude-cli-path <경로>   또는 env PDSA_CLAUDE_CLI";
+            return false;
+        }
+
         // Codex(GPT 구독): ~/.codex/auth.json 의 토큰을 재사용. 키 불필요.
         if (options.Auth == AuthMode.Codex)
         {
@@ -166,6 +177,7 @@ public static class OpenAiConfig
             AuthMode.OAuth => !string.IsNullOrWhiteSpace(o.OAuth?.AccessToken)
                 || (!string.IsNullOrWhiteSpace(o.OAuth?.RefreshToken) && !string.IsNullOrWhiteSpace(o.OAuth?.TokenEndpoint)),
             AuthMode.Codex => Codex.Load() is not null,
+            AuthMode.ClaudeCli => ClaudeCli.IsAvailable(),
             _ => !string.IsNullOrWhiteSpace(o.ApiKey) && !o.ApiKey.StartsWith(PlaceholderPrefix),
         };
         var authLabel = o.Auth switch
@@ -173,6 +185,7 @@ public static class OpenAiConfig
             AuthMode.None => "none(키리스)",
             AuthMode.OAuth => "oauth",
             AuthMode.Codex => "codex(GPT 구독)",
+            AuthMode.ClaudeCli => "claude-cli(claude -p)",
             _ => "apikey",
         };
         return (o.BaseUrl, Mask(o.ApiKey), o.Model, o.ReasoningEffort ?? "(모델 기본)", authLabel, KeySource(), configured);
@@ -240,6 +253,7 @@ public static class OpenAiConfig
         "none" => AuthMode.None,
         "oauth" => AuthMode.OAuth,
         "codex" => AuthMode.Codex,
+        "claudecli" => AuthMode.ClaudeCli,
         _ => AuthMode.ApiKey, // "apikey"/null/미상 → 기본
     };
 
@@ -250,6 +264,11 @@ public static class OpenAiConfig
         o["base_url"] = Codex.DefaultBaseUrl;
         o["model"] = Codex.DefaultModel;
     });
+
+    /// <summary>Claude Code CLI(claude -p) 모드로 전환: auth_mode=claudecli(모델 미강제 — claude 기본 사용).</summary>
+    public static string SetClaudeCli() => Update(o => o["auth_mode"] = "claudecli");
+    public static string? ReadClaudeCliPath() => ReadGlobalString("claude_cli_path");
+    public static string SetClaudeCliPath(string path) => Update(o => o["claude_cli_path"] = Path.GetFullPath(path));
 
     private static string? ReadRepoString(string? repoPath, string name)
     {

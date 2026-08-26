@@ -34,11 +34,15 @@ public sealed class GuideCommand : ICliCommand
             return 3;
         }
 
-        using var llm = new OpenAiClient(options);
-        Console.WriteLine($"(model: {options.Model})");
-        var answer = await llm.CompleteAsync(SystemPrompt, prompt, ct);
-        Console.WriteLine();
-        Console.WriteLine(answer);
-        return 0;
+        var llm = LlmClientFactory.Create(options);   // 비-OpenAI 프로바이더(codex/claude-cli) 라우팅
+        try
+        {
+            Console.WriteLine($"(model: {options.Model})");
+            var answer = await llm.CompleteAsync(SystemPrompt, prompt, ct);
+            Console.WriteLine();
+            Console.WriteLine(answer);
+            return 0;
+        }
+        finally { (llm as IDisposable)?.Dispose(); }
     }
 }

@@ -9,6 +9,8 @@ public enum AuthMode
     OAuth,
     /// <summary>Codex(ChatGPT 구독) OAuth. ~/.codex/auth.json 재사용 + Responses API.</summary>
     Codex,
+    /// <summary>공식 Claude Code CLI(claude -p) 서브프로세스. 별도 토큰 설정 없이 로그인된 Claude 를 그대로 사용.</summary>
+    ClaudeCli,
     /// <summary>무인증. 키리스 로컬 오픈웨이트(ollama/vLLM/LM Studio)용. 사설대역만 자동 허용.</summary>
     None,
 }

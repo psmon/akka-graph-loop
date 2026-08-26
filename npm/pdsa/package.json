@@ -22,7 +22,8 @@
   },
   "files": [
     "bin/pdsa.js",
-    "README.md"
+    "README.md",
+    "README-ko.md"
   ],
   "engines": {
     "node": ">=18"
