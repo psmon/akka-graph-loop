@@ -23,6 +23,7 @@ internal static class ViewerHtml
   select { background:#1c2438; color:#e6e9f0; border:1px solid #2c374f; border-radius:6px; padding:5px 8px; font-size:13px; }
   header .proj { font-size:13px; color:#8fd0ff; font-weight:600; }
   header .db { font-size:11px; color:#66708a; max-width:340px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  header .hit { font-size:12px; color:#c7d0e0; background:#1c2438; border:1px solid #2c374f; border-radius:6px; padding:4px 8px; }
   .legend { display:flex; gap:12px; font-size:12px; color:#aab3c6; align-items:center; }
   .legend .dot { display:inline-block; width:11px; height:11px; border-radius:50%; margin-right:5px; vertical-align:-1px; }
   main { flex:1; display:flex; min-height:0; }
@@ -45,11 +46,15 @@ internal static class ViewerHtml
   <div class="legend">
     <span><span class="dot" style="background:#5b8cff"></span>Project/Plan</span>
     <span><span class="dot" style="background:#37c8c8"></span>Cycle</span>
-    <span><span class="dot" style="background:#37c871"></span>Do</span>
-    <span><span class="dot" style="background:#e6a53a"></span>Study</span>
     <span><span class="dot" style="background:#a06cff"></span>Act</span>
+    <span>Study 판정:</span>
+    <span><span class="dot" style="background:#37c871"></span>met</span>
+    <span><span class="dot" style="background:#e6a53a"></span>partial</span>
+    <span><span class="dot" style="background:#e05a5a"></span>unmet</span>
+    <span><span class="dot" style="background:#e05a5a;border-radius:0"></span>보강(REINFORCES)</span>
   </div>
   <div class="spacer"></div>
+  <span class="hit" id="hitRate"></span>
   <span class="db" id="dbPath" title=""></span>
   <button id="reload">↻ 새로고침</button>
   <button id="relayout">⟳ 레이아웃 재배치</button>
@@ -83,6 +88,7 @@ const msg=document.getElementById("msg");
 const projectSel=document.getElementById("projectSel");
 const projName=document.getElementById("projName");
 const dbPath=document.getElementById("dbPath");
+const hitRate=document.getElementById("hitRate");
 let nodes=[], edges=[], W=800, H=600, dragging=null, raf=null;
 
 // 프로젝트 목록을 채우고 현재 프로젝트를 선택한다.
@@ -114,6 +120,10 @@ async function load(){
   // 헤더에 현재 프로젝트/DB 를 항상 표시(에러여도 어느 프로젝트인지 알 수 있게).
   if(data.project){ projName.textContent="▶ "+data.project; }
   if(data.db){ dbPath.textContent=data.db; dbPath.title=data.db; }
+  if(data.hitRate && data.hitRate.total>0){
+    const h=data.hitRate, pct=Math.round(100*h.met/h.total);
+    hitRate.textContent=`기대충족률 ${h.met}/${h.total} (${pct}%)`;
+  } else { hitRate.textContent="기대충족률 —"; }
   if(data.error){ return showMsg(data.error); }
   if(!data.nodes || data.nodes.length===0){ return showMsg("그래프가 비어 있습니다. 먼저 `-- pdsa` 로 데이터를 생성하세요."); }
   msg.style.display="none";
@@ -161,15 +171,21 @@ function nodeColor(n){
   if(n.kind==="Project"||n.kind==="Run") return "#5b8cff";
   if(n.kind==="Cycle") return "#37c8c8";
   if(n.kind==="Phase"){ const k=((n.props&&n.props.kind)||"").toLowerCase();
-    return {plan:"#5b8cff",do:"#37c871",study:"#e6a53a",act:"#a06cff"}[k]||"#8a94a8"; }
+    // Study 노드는 판정(verdict)에 따라 색을 바꾼다: met=초록 partial=주황 unmet=빨강, 미판정=회색.
+    if(k==="study"){ const v=((n.props&&n.props.verdict)||"").toLowerCase();
+      return {met:"#37c871",partial:"#e6a53a",unmet:"#e05a5a"}[v]||"#8a94a8"; }
+    return {plan:"#5b8cff",do:"#37c871",act:"#a06cff"}[k]||"#8a94a8"; }
   return "#8a94a8";
 }
 
 function render(){
   clear(gEdges); clear(gEdgeLabels); clear(gNodes); clear(gLabels);
   for(const e of edges){
-    const line=el("line",{x1:e.s.x,y1:e.s.y,x2:e.t.x,y2:e.t.y,stroke:e.type==="NEXT"?"#6b78a0":"#39415c","stroke-width":e.type==="NEXT"?2.2:1.4,"marker-end":"url(#arrow)"});
-    if(e.type!=="NEXT") line.setAttribute("stroke-dasharray","4 4");
+    const stroke = e.type==="NEXT" ? "#6b78a0" : e.type==="REINFORCES" ? "#e05a5a" : "#39415c";
+    const width  = (e.type==="NEXT"||e.type==="REINFORCES") ? 2.2 : 1.4;
+    const line=el("line",{x1:e.s.x,y1:e.s.y,x2:e.t.x,y2:e.t.y,stroke:stroke,"stroke-width":width,"marker-end":"url(#arrow)"});
+    if(e.type==="REINFORCES") line.setAttribute("stroke-dasharray","2 3");        // 보강: 빨강 촘촘한 점선
+    else if(e.type!=="NEXT") line.setAttribute("stroke-dasharray","4 4");
     gEdges.appendChild(line);
     const mx=(e.s.x+e.t.x)/2, my=(e.s.y+e.t.y)/2;
     const t=el("text",{x:mx,y:my-4,"text-anchor":"middle",class:"edge-label"}); t.textContent=e.type; gEdgeLabels.appendChild(t);

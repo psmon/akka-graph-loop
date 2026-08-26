@@ -21,6 +21,10 @@ public sealed class StatusCommand : ICliCommand
         Console.WriteLine($"그래프DB : {s.DbPath}");
         Console.WriteLine($"LLM      : {(s.LlmConfigured ? "설정됨" : "미설정")}");
         Console.WriteLine($"누적 사이클: {s.Workflow.CycleCount()}개");
+        var (met, total) = s.Workflow.HitRate();
+        Console.WriteLine(total > 0
+            ? $"기대 충족률: {met}/{total} ({100 * met / total}%)   (재현율 = 기대대로 된 사이클 비율)"
+            : "기대 충족률: (판정된 사이클 없음)");
 
         var recent = s.Workflow.Recent(limit);
         if (recent.Count == 0)
@@ -32,7 +36,8 @@ public sealed class StatusCommand : ICliCommand
         Console.WriteLine("\n최근 사이클:");
         foreach (var c in recent)
         {
-            Console.WriteLine($"  #{c.Id}  [{c.Status}]  {c.Started}");
+            var badge = c.Verdict.Length > 0 ? $"  판정:{c.Verdict}" : "";
+            Console.WriteLine($"  #{c.Id}  [{c.Status}]{badge}  {c.Started}");
             foreach (var p in c.Phases)
                 Console.WriteLine($"     - {p.Kind,-5}: {OneLine(p.Input)}");
         }

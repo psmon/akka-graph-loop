@@ -42,7 +42,13 @@ app.MapGet("/api/graph", (HttpContext ctx) =>
             if (wf.HasWorkflowSchema())
             {
                 var m = wf.Read();
-                return Results.Json(new { project, db = dbPath, nodes = m.Nodes, edges = m.Edges });
+                // 기대 충족률(재현율): verdict 있는 Study 노드 중 met 비율.
+                var verdicts = m.Nodes
+                    .Where(n => n.Kind == "Phase" && n.Props.TryGetValue("kind", out var k) && k == "study"
+                                && n.Props.ContainsKey("verdict"))
+                    .Select(n => n.Props["verdict"]).ToList();
+                var hit = new { met = verdicts.Count(v => v == "met"), total = verdicts.Count };
+                return Results.Json(new { project, db = dbPath, hitRate = hit, nodes = m.Nodes, edges = m.Edges });
             }
 
         using var reader = new KuzuPdsaReader(dbPath);
