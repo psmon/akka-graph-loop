@@ -14,7 +14,7 @@ public sealed class ConfigCommand : ICliCommand
     public string Usage =>
         "pdsa config key <키> | key-file <파일> | model <모델> | reasoning <none|low|medium|high|xhigh|max> | base-url <URL> "
         + "| provider <local|openai-compat [URL]|openai> | auth <apikey|oauth|none> | allow-insecure-no-auth <true|false> "
-        + "| oauth <endpoint|device-endpoint|client|refresh-token|refresh-token-file> <값> | login | show";
+        + "| oauth <endpoint|device-endpoint|client|refresh-token|refresh-token-file> <값> | login | lang <en|ko|auto> | show";
 
     public async Task<int> RunAsync(string[] args, CancellationToken ct)
     {
@@ -71,6 +71,11 @@ public sealed class ConfigCommand : ICliCommand
                 if (value is not ("apikey" or "oauth" or "none"))
                     return Fail("사용법: pdsa config auth <apikey|oauth|none>");
                 Console.WriteLine($"저장됨(auth={value}): {OpenAiConfig.SetAuthMode(ParseAuth(value))}");
+                break;
+            case "lang":
+                if (value is not ("en" or "ko" or "auto"))
+                    return Fail("사용법: pdsa config lang <en|ko|auto>   (auto=OS 로케일 자동)");
+                Console.WriteLine($"저장됨(lang={value}): {OpenAiConfig.SetLang(value)}");
                 break;
             case "allow-insecure-no-auth":
                 if (!bool.TryParse(value, out var allow)) return Fail("사용법: pdsa config allow-insecure-no-auth <true|false>");
@@ -145,9 +150,11 @@ public sealed class ConfigCommand : ICliCommand
     private static void Show()
     {
         var (url, masked, model, reasoning, auth, source, ok) = OpenAiConfig.Describe();
+        var langCfg = OpenAiConfig.ReadLang() ?? "auto";
         Console.WriteLine($"base_url  : {url}");
         Console.WriteLine($"model     : {model}");
         Console.WriteLine($"auth_mode : {auth}");
+        Console.WriteLine($"lang      : {langCfg}  (effective: {PdsaLang.Resolve(System.Array.Empty<string>())})");
         Console.WriteLine($"reasoning : {reasoning}");
         Console.WriteLine($"api_key   : {masked}  ({source})");
         Console.WriteLine($"상태      : {(ok ? "설정됨 — `pdsa check` 로 호출 확인" : "미설정")}");

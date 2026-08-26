@@ -76,6 +76,13 @@ public static class OpenAiConfig
     public static string SetBaseUrl(string url) => Update(o => o["base_url"] = url);
     public static string SetReasoning(string effort) => Update(o => o["reasoning_effort"] = effort);
     public static string SetAuthMode(AuthMode mode) => Update(o => o["auth_mode"] = mode.ToString().ToLowerInvariant());
+    /// <summary>표시/기록 언어. "auto"(또는 미상)면 설정을 지워 OS 로케일 자동 감지로 되돌린다.</summary>
+    public static string SetLang(string lang) => Update(o =>
+    {
+        var v = lang.Trim().ToLowerInvariant();
+        if (v is "auto" or "") o.Remove("lang"); else o["lang"] = v;
+    });
+    public static string? ReadLang() => ReadGlobalString("lang");
     public static string SetAllowInsecureNoAuth(bool allow) => Update(o => o["allow_insecure_no_auth"] = allow);
 
     /// <summary>provider 프리셋. 베이스값만 제공하고 사용자 개별설정(base_url/model)이 이후 재정의 가능.</summary>
