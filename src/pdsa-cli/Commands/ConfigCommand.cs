@@ -12,7 +12,7 @@ public sealed class ConfigCommand : ICliCommand
     public string Name => "config";
     public string Summary => "LLM 키/모델 설정(분리) — 키 직접 또는 파일 위치";
     public string Usage =>
-        "pdsa config key <키> | key-file <파일경로> | model <모델> | base-url <URL> | show";
+        "pdsa config key <키> | key-file <파일> | model <모델> | reasoning <none|low|medium|high|xhigh|max> | base-url <URL> | show";
 
     public Task<int> RunAsync(string[] args, CancellationToken ct)
     {
@@ -41,6 +41,10 @@ public sealed class ConfigCommand : ICliCommand
                 if (string.IsNullOrWhiteSpace(value)) return Fail("사용법: pdsa config model <모델>");
                 Console.WriteLine($"저장됨(모델={value}): {OpenAiConfig.SetModel(value)}");
                 break;
+            case "reasoning":
+                if (string.IsNullOrWhiteSpace(value)) return Fail("사용법: pdsa config reasoning <none|low|medium|high|xhigh|max>");
+                Console.WriteLine($"저장됨(reasoning={value}): {OpenAiConfig.SetReasoning(value)}");
+                break;
             case "base-url":
                 if (string.IsNullOrWhiteSpace(value)) return Fail("사용법: pdsa config base-url <URL>");
                 Console.WriteLine($"저장됨(base-url={value}): {OpenAiConfig.SetBaseUrl(value)}");
@@ -56,11 +60,12 @@ public sealed class ConfigCommand : ICliCommand
 
     private static void Show()
     {
-        var (url, masked, model, source, ok) = OpenAiConfig.Describe();
-        Console.WriteLine($"base_url : {url}");
-        Console.WriteLine($"model    : {model}");
-        Console.WriteLine($"api_key  : {masked}  ({source})");
-        Console.WriteLine($"상태     : {(ok ? "설정됨 — `pdsa check` 로 호출 확인" : "미설정")}");
+        var (url, masked, model, reasoning, source, ok) = OpenAiConfig.Describe();
+        Console.WriteLine($"base_url  : {url}");
+        Console.WriteLine($"model     : {model}");
+        Console.WriteLine($"reasoning : {reasoning}");
+        Console.WriteLine($"api_key   : {masked}  ({source})");
+        Console.WriteLine($"상태      : {(ok ? "설정됨 — `pdsa check` 로 호출 확인" : "미설정")}");
     }
 
     private static Task<int> Fail(string msg) { Console.Error.WriteLine(msg); return Task.FromResult(2); }

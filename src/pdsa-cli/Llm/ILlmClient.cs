@@ -1,7 +1,7 @@
 namespace PdsaCli.Llm;
 
-/// <summary>LLM 옵션(엔드포인트/키/모델).</summary>
-public sealed record LlmOptions(string BaseUrl, string ApiKey, string Model);
+/// <summary>LLM 옵션(엔드포인트/키/모델/추론강도). ReasoningEffort 는 GPT-5.x 추론 모델용(none~max), 미설정 시 모델 기본.</summary>
+public sealed record LlmOptions(string BaseUrl, string ApiKey, string Model, string? ReasoningEffort = null);
 
 /// <summary>LLM 채팅 완성 인터페이스. 구현체를 갈아끼울 수 있게 추상화.</summary>
 public interface ILlmClient

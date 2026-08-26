@@ -200,17 +200,19 @@ dotnet publish src/pdsa-cli -c Release -r win-x64
 pdsa config key <키>            # 키 직접 입력
 pdsa config key-file <파일경로>  # 키 파일 위치만 저장(키 미노출). 파일은 .secret/openai.json 포맷 또는 원시 키
 pdsa config model <모델>         # 모델만 설정(키 유지)
+pdsa config reasoning <레벨>     # GPT-5.x 추론강도: none|low|medium|high|xhigh|max (미설정=모델 기본)
 pdsa config base-url <URL>       # 엔드포인트
 pdsa config show                 # 현재 설정(키 마스킹, 출처 표기)
+pdsa models [--filter gpt-5.6]   # 엔드포인트 지원 모델 목록 조회
 pdsa check                       # 실제 LLM 호출로 연결 확인
 ```
 
-로드 우선순위: 환경변수(`OPENAI_API_KEY`/`OPENAI_MODEL`/`OPENAI_BASE_URL`) → 전역 설정
-(`{LocalAppData}/pdsa-cli/openai.json`) → 레포 `.secret/openai.json`. 설정 파일은 trailing comma/주석을 허용한다.
+로드 우선순위: 환경변수(`OPENAI_API_KEY`/`OPENAI_MODEL`/`OPENAI_BASE_URL`/`OPENAI_REASONING_EFFORT`) →
+전역 설정(`{LocalAppData}/pdsa-cli/openai.json`) → 레포 `.secret/openai.json`. 설정 파일은 trailing comma/주석을 허용한다.
 실제 키 파일(`.secret/*.json`, 전역 설정)은 git 에 커밋되지 않는다.
 
-> 참고: 기본 모델은 `gpt-5.6-tera` 이지만 표준 OpenAI 엔드포인트에는 존재하지 않는다(`model_not_found`).
-> 유효한 모델로 설정하거나(`pdsa config model gpt-4o-mini` 등) 해당 모델을 제공하는 `base-url` 을 지정할 것.
+> 기본 모델은 **`gpt-5.6-terra`**(GPT-5.6 계열 추론 모델, intelligence·cost 균형 tier). 단일턴·툴 미사용이라
+> Chat Completions 로 충분하다(OpenAI 는 추론/툴콜/멀티턴엔 Responses API 를 권장). `pdsa models` 로 실제 지원 모델을 확인할 수 있다.
 
 ## 구조
 

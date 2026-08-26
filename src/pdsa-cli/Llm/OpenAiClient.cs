@@ -12,9 +12,10 @@ internal sealed record ChatMessage(
 
 internal sealed record ChatRequest(
     [property: JsonPropertyName("model")] string Model,
-    [property: JsonPropertyName("messages")] ChatMessage[] Messages);
+    [property: JsonPropertyName("messages")] ChatMessage[] Messages,
+    [property: JsonPropertyName("reasoning_effort")] string? ReasoningEffort);
 
-[JsonSourceGenerationOptions(DefaultIgnoreCondition = JsonIgnoreCondition.Never)]
+[JsonSourceGenerationOptions(DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull)]
 [JsonSerializable(typeof(ChatRequest))]
 internal partial class OpenAiJsonContext : JsonSerializerContext;
 
@@ -41,7 +42,7 @@ public sealed class OpenAiClient : ILlmClient, IDisposable
         {
             new ChatMessage("system", systemPrompt),
             new ChatMessage("user", userPrompt),
-        });
+        }, _options.ReasoningEffort);
 
         var json = JsonSerializer.Serialize(request, OpenAiJsonContext.Default.ChatRequest);
         using var content = new StringContent(json, Encoding.UTF8, "application/json");
@@ -59,6 +60,23 @@ public sealed class OpenAiClient : ILlmClient, IDisposable
             .GetString();
 
         return text?.Trim() ?? "";
+    }
+
+    /// <summary>지원 모델 id 목록을 조회한다(GET /models).</summary>
+    public async Task<IReadOnlyList<string>> ListModelsAsync(CancellationToken ct = default)
+    {
+        using var resp = await _http.GetAsync("models", ct);
+        var body = await resp.Content.ReadAsStringAsync(ct);
+        if (!resp.IsSuccessStatusCode)
+            throw new InvalidOperationException($"모델 목록 조회 실패({(int)resp.StatusCode}): {Truncate(body, 500)}");
+
+        using var doc = JsonDocument.Parse(body);
+        var ids = new List<string>();
+        foreach (var m in doc.RootElement.GetProperty("data").EnumerateArray())
+            if (m.TryGetProperty("id", out var id) && id.GetString() is { } s)
+                ids.Add(s);
+        ids.Sort(StringComparer.Ordinal);
+        return ids;
     }
 
     private static string Truncate(string s, int n) => s.Length <= n ? s : s[..n] + "…";

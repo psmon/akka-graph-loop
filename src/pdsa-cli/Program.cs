@@ -20,6 +20,7 @@ var router = new CommandRouter(new ICliCommand[]
     new ViewCommand(),
     new ConfigCommand(),
     new CheckCommand(),
+    new ModelsCommand(),
     new GuideCommand(),
     new RunCommand(),
     new VersionCommand(),

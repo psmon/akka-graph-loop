@@ -15,7 +15,7 @@ namespace PdsaCli.Llm;
 public static class OpenAiConfig
 {
     public const string DefaultBaseUrl = "https://api.openai.com/v1";
-    public const string DefaultModel = "gpt-5.6-tera";
+    public const string DefaultModel = "gpt-5.6-terra";
     private const string PlaceholderPrefix = "sk-여기에";
 
     private static readonly JsonDocumentOptions Lenient =
@@ -43,13 +43,14 @@ public static class OpenAiConfig
     public static string SetKeyFile(string path) => Update(o => { o["api_key_file"] = Path.GetFullPath(path); o.Remove("api_key"); });
     public static string SetModel(string model) => Update(o => o["model"] = model);
     public static string SetBaseUrl(string url) => Update(o => o["base_url"] = url);
+    public static string SetReasoning(string effort) => Update(o => o["reasoning_effort"] = effort);
 
     /// <summary>표시용 현재 설정(키는 마스킹, 출처 표기).</summary>
-    public static (string BaseUrl, string MaskedKey, string Model, string KeySource, bool Configured) Describe()
+    public static (string BaseUrl, string MaskedKey, string Model, string Reasoning, string KeySource, bool Configured) Describe()
     {
         var o = Resolve();
         var configured = !string.IsNullOrWhiteSpace(o.ApiKey) && !o.ApiKey.StartsWith(PlaceholderPrefix);
-        return (o.BaseUrl, Mask(o.ApiKey), o.Model, KeySource(), configured);
+        return (o.BaseUrl, Mask(o.ApiKey), o.Model, o.ReasoningEffort ?? "(모델 기본)", KeySource(), configured);
     }
 
     // ── 내부 구현 ───────────────────────────────────────────────────────────
@@ -62,12 +63,16 @@ public static class OpenAiConfig
         if (repo is not null) MergeFile(repo, ref baseUrl, ref apiKey, ref model);
         MergeGlobal(ref baseUrl, ref apiKey, ref model);
 
+        // reasoning_effort: 전역 설정 + 환경변수(미설정 시 모델 기본)
+        string? reasoning = ReadGlobalString("reasoning_effort");
+
         // 환경변수 최우선
         baseUrl = Environment.GetEnvironmentVariable("OPENAI_BASE_URL") ?? baseUrl;
         apiKey = Environment.GetEnvironmentVariable("OPENAI_API_KEY") ?? apiKey;
         model = Environment.GetEnvironmentVariable("OPENAI_MODEL") ?? model;
+        reasoning = Environment.GetEnvironmentVariable("OPENAI_REASONING_EFFORT") ?? reasoning;
 
-        return new LlmOptions(baseUrl, apiKey, model);
+        return new LlmOptions(baseUrl, apiKey, model, reasoning);
     }
 
     private static void MergeGlobal(ref string baseUrl, ref string apiKey, ref string model)
@@ -154,6 +159,14 @@ public static class OpenAiConfig
         }
         var repo = FindUp(".secret/openai.json");
         return repo is not null ? $"레포: {repo}" : "(없음)";
+    }
+
+    private static string? ReadGlobalString(string name)
+    {
+        var path = PdsaProjectPaths.GlobalConfigFile;
+        if (!File.Exists(path)) return null;
+        try { using var doc = JsonDocument.Parse(File.ReadAllText(path), Lenient); return Str(doc.RootElement, name); }
+        catch { return null; }
     }
 
     private static string? Str(JsonElement e, string name)
