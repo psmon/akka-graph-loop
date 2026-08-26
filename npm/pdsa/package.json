@@ -1,0 +1,35 @@
+{
+  "name": "@webnori/pdsa",
+  "version": "0.0.1",
+  "description": "PDSA (Plan-Do-Study-Act) continuous-improvement CLI with a per-project Kùzu graph memory. Native AOT binary, delivered per-platform.",
+  "keywords": [
+    "pdsa",
+    "deming",
+    "continuous-improvement",
+    "cli",
+    "kuzu",
+    "graph",
+    "ai-agent-memory"
+  ],
+  "homepage": "https://github.com/psmon/akka-graph-loop",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/psmon/akka-graph-loop.git"
+  },
+  "license": "MIT",
+  "bin": {
+    "pdsa": "bin/pdsa.js"
+  },
+  "files": [
+    "bin/pdsa.js",
+    "README.md"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "optionalDependencies": {
+    "@webnori/pdsa-win32-x64": "0.0.1",
+    "@webnori/pdsa-linux-x64": "0.0.1",
+    "@webnori/pdsa-darwin-arm64": "0.0.1"
+  }
+}

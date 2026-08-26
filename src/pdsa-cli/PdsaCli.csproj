@@ -7,12 +7,18 @@
     <Nullable>enable</Nullable>
     <AssemblyName>pdsa</AssemblyName>
     <RootNamespace>PdsaCli</RootNamespace>
+    <!-- 기본 버전(태그 없을 때). CI 는 태그에서 -p:Version=<ver> 로 덮어쓴다. -->
+    <Version>0.0.1</Version>
 
     <!--
-      배포: Native AOT 단일 네이티브 실행 파일.
-        dotnet publish src/pdsa-cli -c Release -r win-x64
+      배포: Native AOT 단일 네이티브 실행 파일 → npm(@webnori/pdsa)으로 게시.
+      각 OS 러너에서 해당 RID 로 publish(호스트=타깃 전제):
+        dotnet publish src/pdsa-cli -c Release -r win-x64   -p:Version=0.0.1   (Windows)
+        dotnet publish src/pdsa-cli -c Release -r linux-x64 -p:Version=0.0.1   (Linux)
+        dotnet publish src/pdsa-cli -c Release -r osx-arm64 -p:Version=0.0.1   (macOS Apple Silicon)
       Akka.NET 은 명시적 Config(ConfigurationFactory.Default)로 ConfigurationManager 경로를
-      우회하면 AOT 에서 동작한다(AkkaPdsaEngine 참고). 네이티브 Kùzu 는 P/Invoke 로 이용.
+      우회하면 AOT 에서 동작한다(AkkaPdsaEngine 참고). 네이티브 Kùzu 는 P/Invoke 로 이용
+      (native/Kuzu.targets 가 호스트 플랫폼 lib 를 자동 다운로드/포함).
     -->
     <PublishAot>true</PublishAot>
     <InvariantGlobalization>true</InvariantGlobalization>

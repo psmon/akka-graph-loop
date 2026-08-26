@@ -23,3 +23,11 @@ native/_cache/
 coverage*.json
 coverage*.xml
 *.coverage
+
+# npm packaging
+node_modules/
+# CI 가 조립하는 플랫폼 패키지(바이너리 포함) — 커밋 안 함
+npm/platform/@webnori/
+# 런처는 소스이므로 위 bin/ 규칙에서 되살린다
+!npm/pdsa/bin/
+!npm/pdsa/bin/pdsa.js
