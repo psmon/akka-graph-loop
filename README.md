@@ -1,5 +1,21 @@
 # akka-graph-loop
 
+**[한국어](README.md) · [English](README-en.md)**
+
+## 🛠️ `pdsa` — PDSA × 그래프 엔지니어링 서포트 툴
+
+```bash
+npm i -g @webnori/pdsa      # Windows x64 · Linux x64 · macOS (Apple Silicon)
+pdsa version
+```
+
+**`pdsa`** 는 데밍의 **PDSA(Plan–Do–Study–Act) 지속개선 루프**를 **그래프 엔지니어링**으로 지원하는
+CLI 서포트 툴이다. Plan 에서 세운 *기대 평가*를 Study 에서 LLM 이 판정(met/partial/unmet)하고, 각 사이클을
+**프로젝트별 Kùzu 그래프 메모리**에 누적해 "AI 에이전트를 위한 장기 메모리"를 만든다.
+🚧 **지속 개발 중** — 이 툴이 자라난 학습 프로젝트(akka-graph-loop) 전체 소개는 아래에 이어진다.
+
+---
+
 **Akka.NET Streams의 Graph 기능을 조사하고, 각 개념을 실제로 돌려보며 배우는 학습용 프로젝트.**
 
 선형 `Source → Flow → Sink` 파이프라인으로는 표현할 수 없는 **fan-out(1→N 분기)** · **fan-in(N→1 합류)**,
