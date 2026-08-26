@@ -8,10 +8,10 @@ namespace PdsaCli.Viewer;
 /// </summary>
 public static class ViewerLauncher
 {
-    public static async Task<int> LaunchAsync(int port, string? dbPath, bool openBrowser, CancellationToken ct)
+    public static async Task<int> LaunchAsync(int port, string? dbPath, string? project, bool openBrowser, CancellationToken ct)
     {
         var url = $"http://localhost:{port}";
-        var psi = BuildStartInfo(port, dbPath);
+        var psi = BuildStartInfo(port, dbPath, project);
         if (psi is null)
         {
             Console.Error.WriteLine("뷰어를 찾지 못했습니다(배포된 AkkaGraphLoop.Viewer 실행 파일 또는 개발 트리의 뷰어 프로젝트).");
@@ -34,7 +34,7 @@ public static class ViewerLauncher
         return proc.ExitCode;
     }
 
-    private static ProcessStartInfo? BuildStartInfo(int port, string? dbPath)
+    private static ProcessStartInfo? BuildStartInfo(int port, string? dbPath, string? project)
     {
         // 1) 배포 시나리오: 실행 파일 옆의 뷰어 실행 파일
         var exeName = OperatingSystem.IsWindows() ? "AkkaGraphLoop.Viewer.exe" : "AkkaGraphLoop.Viewer";
@@ -42,7 +42,7 @@ public static class ViewerLauncher
         if (File.Exists(sibling))
         {
             var psi = new ProcessStartInfo(sibling) { ArgumentList = { "--port", port.ToString() } };
-            if (dbPath is not null) { psi.ArgumentList.Add("--db"); psi.ArgumentList.Add(dbPath); }
+            AddDbAndProject(psi, dbPath, project);
             return psi;
         }
 
@@ -54,11 +54,18 @@ public static class ViewerLauncher
             {
                 ArgumentList = { "run", "--project", csproj, "--", "--port", port.ToString() },
             };
-            if (dbPath is not null) { psi.ArgumentList.Add("--db"); psi.ArgumentList.Add(dbPath); }
+            AddDbAndProject(psi, dbPath, project);
             return psi;
         }
 
         return null;
+    }
+
+    private static void AddDbAndProject(ProcessStartInfo psi, string? dbPath, string? project)
+    {
+        if (dbPath is not null) { psi.ArgumentList.Add("--db"); psi.ArgumentList.Add(dbPath); }
+        // 프로젝트명을 함께 넘겨 뷰어 헤더/선택기가 현재 프로젝트를 정확히 표시하도록 한다.
+        if (project is not null) { psi.ArgumentList.Add("--project"); psi.ArgumentList.Add(project); }
     }
 
     private static string? FindUp(string relative)

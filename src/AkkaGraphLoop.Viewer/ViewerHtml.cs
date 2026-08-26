@@ -20,6 +20,9 @@ internal static class ViewerHtml
   header .spacer { flex:1; }
   button { background:#1c2438; color:#e6e9f0; border:1px solid #2c374f; border-radius:6px; padding:6px 12px; cursor:pointer; font-size:13px; }
   button:hover { background:#26314c; }
+  select { background:#1c2438; color:#e6e9f0; border:1px solid #2c374f; border-radius:6px; padding:5px 8px; font-size:13px; }
+  header .proj { font-size:13px; color:#8fd0ff; font-weight:600; }
+  header .db { font-size:11px; color:#66708a; max-width:340px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
   .legend { display:flex; gap:12px; font-size:12px; color:#aab3c6; align-items:center; }
   .legend .dot { display:inline-block; width:11px; height:11px; border-radius:50%; margin-right:5px; vertical-align:-1px; }
   main { flex:1; display:flex; min-height:0; }
@@ -37,7 +40,8 @@ internal static class ViewerHtml
 <body>
 <header>
   <h1>PDSA 그래프 뷰어</h1>
-  <span class="sub">Kùzu 임베디드 그래프 DB · Deming PDSA</span>
+  <label class="sub">프로젝트 <select id="projectSel"></select></label>
+  <span class="proj" id="projName"></span>
   <div class="legend">
     <span><span class="dot" style="background:#5b8cff"></span>Project/Plan</span>
     <span><span class="dot" style="background:#37c8c8"></span>Cycle</span>
@@ -46,6 +50,7 @@ internal static class ViewerHtml
     <span><span class="dot" style="background:#a06cff"></span>Act</span>
   </div>
   <div class="spacer"></div>
+  <span class="db" id="dbPath" title=""></span>
   <button id="reload">↻ 새로고침</button>
   <button id="relayout">⟳ 레이아웃 재배치</button>
 </header>
@@ -75,16 +80,40 @@ const svg=document.getElementById("svg");
 const gEdges=document.getElementById("edges"), gEdgeLabels=document.getElementById("edgeLabels");
 const gNodes=document.getElementById("nodes"), gLabels=document.getElementById("labels");
 const msg=document.getElementById("msg");
+const projectSel=document.getElementById("projectSel");
+const projName=document.getElementById("projName");
+const dbPath=document.getElementById("dbPath");
 let nodes=[], edges=[], W=800, H=600, dragging=null, raf=null;
+
+// 프로젝트 목록을 채우고 현재 프로젝트를 선택한다.
+async function loadProjects(){
+  try{
+    const data = await (await fetch("/api/projects")).json();
+    const list = data.projects || [];
+    projectSel.innerHTML="";
+    if(list.length===0 && data.current){ list.push(data.current); }
+    for(const name of list){
+      const opt=document.createElement("option");
+      opt.value=name; opt.textContent=name;
+      if(name===data.current) opt.selected=true;
+      projectSel.appendChild(opt);
+    }
+    if(list.length<=1) projectSel.disabled=true;
+  }catch(e){ /* 목록 실패해도 그래프는 시도 */ }
+}
 
 function size(){ const r=svg.getBoundingClientRect(); W=r.width; H=r.height; svg.setAttribute("viewBox",`0 0 ${W} ${H}`); }
 window.addEventListener("resize", size);
 
 async function load(){
   size();
+  const sel = projectSel.value ? "?project="+encodeURIComponent(projectSel.value) : "";
   let data;
-  try { data = await (await fetch("/api/graph")).json(); }
+  try { data = await (await fetch("/api/graph"+sel)).json(); }
   catch(e){ return showMsg("서버 응답을 읽지 못했습니다."); }
+  // 헤더에 현재 프로젝트/DB 를 항상 표시(에러여도 어느 프로젝트인지 알 수 있게).
+  if(data.project){ projName.textContent="▶ "+data.project; }
+  if(data.db){ dbPath.textContent=data.db; dbPath.title=data.db; }
   if(data.error){ return showMsg(data.error); }
   if(!data.nodes || data.nodes.length===0){ return showMsg("그래프가 비어 있습니다. 먼저 `-- pdsa` 로 데이터를 생성하세요."); }
   msg.style.display="none";
@@ -177,8 +206,9 @@ function startDrag(ev,n){ dragging=n; cancelAnimationFrame(raf);
 }
 
 document.getElementById("reload").addEventListener("click",load);
+projectSel.addEventListener("change",load);   // 프로젝트 전환 → 재시작 없이 재조회
 document.getElementById("relayout").addEventListener("click",()=>{ if(nodes.length){ nodes.forEach((n,i)=>{const a=2*Math.PI*i/nodes.length; n.x=W/2+Math.cos(a)*160; n.y=H/2+Math.sin(a)*140; n.vx=n.vy=0;}); const root=nodes.find(n=>n.kind==="Project"||n.kind==="Run"); if(root){root.x=W/2;root.y=90;} startSim(); }});
-load();
+loadProjects().then(load);
 </script>
 </body>
 </html>
