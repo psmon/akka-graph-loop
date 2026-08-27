@@ -56,4 +56,29 @@ public class ArgUtilTests
         Assert.Equal("a b", ArgUtil.Positional(new[] { "--flag", "a", "-x", "b" }));
         Assert.Equal("", ArgUtil.Positional(new[] { "--only", "-flags" }));
     }
+
+    [Fact]
+    public void Positional_excludes_value_option_values()
+    {
+        // 값-옵션(--project 등)의 '값' 토큰은 본문에 섞이지 않아야 한다(멀티프로젝트 핵심).
+        Assert.Equal("my plan",
+            ArgUtil.Positional(new[] { "my", "plan", "--project", "akka-graph-loop" }));
+        // 옵션이 본문 앞에 와도 값만 정확히 건너뛴다.
+        Assert.Equal("do report",
+            ArgUtil.Positional(new[] { "--project", "svc-a", "do", "report" }));
+        // 여러 값-옵션이 섞여도 각 값만 제외.
+        Assert.Equal("result text",
+            ArgUtil.Positional(new[] { "result", "--lang", "ko", "text", "--expect", "met" }));
+        // Option() 은 여전히 값을 정확히 반환(본문 제외와 별개).
+        var args = new[] { "my", "plan", "--project", "akka-graph-loop" };
+        Assert.Equal("akka-graph-loop", ArgUtil.Option(args, "--project"));
+    }
+
+    [Fact]
+    public void Positional_keeps_value_of_non_whitelisted_flag_neighbor()
+    {
+        // 플래그(--fresh)는 값이 없으므로 바로 뒤 토큰은 본문으로 유지되어야 한다.
+        Assert.Equal("plan body",
+            ArgUtil.Positional(new[] { "plan", "--fresh", "body" }));
+    }
 }

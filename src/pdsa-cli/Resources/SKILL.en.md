@@ -34,6 +34,8 @@ From this repo root, decide which form works and read `pdsa` in this doc as that
      List supported models with `pdsa models --filter gpt-5.6` (default `gpt-5.6-terra`).
 2. **Set the project**: `pdsa project set <name>` (usually the current repo name).
    - From then on every record accumulates into this project's DB. Check/list: `pdsa project show`, `pdsa project list`.
+   - **Concurrent runs (multi-project)**: `project set` is per-user global state, so running several projects in parallel would overwrite each other. Instead pass `--project <name>` on each command — that call alone runs independently against that project's DB (falling back to the global/current-dir project when omitted). The CLI is stateless (runs then exits), so different projects have separate DBs and never conflict when run at the same time.
+     - e.g. `pdsa plan "…" --project svc-a` and `pdsa plan "…" --project svc-b` concurrently.
 
 ## 2. One cycle (P → D → S → A)
 
@@ -56,7 +58,8 @@ Run at least one cycle per task. **Read each step's CLI output and apply it to t
 
 - **Summarize each step's output** (hypothesis/summary/learnings/improvements) briefly for the user, and **apply it to the next work**.
 - Don't stop at planning — actually test the hypothesis `plan` set, and leave the learning via `study`.
-- When switching between repos/projects, start with `pdsa project set <name>` (each project's memory is separate).
+- When switching between repos/projects, start with `pdsa project set <name>` (each project's memory is separate). To run them in parallel, pass `--project <name>` on each command instead of `project set` (see §1.2).
+- **Tip (not official) — separating by role**: to run multiple flows in parallel within one project, use `<project>-<role>` as distinct project names and split them with `--project` so each role keeps its own cycle (e.g. `myrepo-frontend`, `myrepo-infra`). Only one "in-progress cycle" is tracked per project, so split the name when you need concurrent progress.
 - Check accumulated state: `pdsa status` (recent cycles/steps). Visualize the graph: `pdsa view` (local port viewer).
 - Text with quotes/newlines can be passed as-is (safely stored via parameter binding).
 
