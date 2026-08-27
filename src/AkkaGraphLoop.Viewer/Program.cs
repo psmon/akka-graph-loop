@@ -1,5 +1,4 @@
 using AkkaGraphLoop.Core.Pdsa;
-using AkkaGraphLoop.Viewer;
 
 // 인자: --db <경로> | --project <이름> (기본: 데모 DB), --port <번호> (기본: 5099)
 var startupProject = GetArg(args, "--project");
@@ -16,7 +15,7 @@ builder.WebHost.UseUrls($"http://localhost:{port}");
 var app = builder.Build();
 
 // 그래프 페이지
-app.MapGet("/", () => Results.Content(ViewerHtml.Page, "text/html; charset=utf-8"));
+app.MapGet("/", () => Results.Content(PdsaViewerHtml.Page, "text/html; charset=utf-8"));
 
 // 프로젝트 목록 + 현재 선택(헤더 드롭다운용).
 app.MapGet("/api/projects", () => Results.Json(new

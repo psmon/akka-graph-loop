@@ -21,6 +21,6 @@ public sealed class ViewCommand : ICliCommand
         var openBrowser = !ArgUtil.Flag(args, "--no-open");
 
         Console.WriteLine($"프로젝트 [{project}] 그래프: {dbPath}");
-        return await ViewerLauncher.LaunchAsync(port, dbPath, project, openBrowser, ct);
+        return await ViewerServer.RunAsync(port, dbPath, project, openBrowser, ct);
     }
 }

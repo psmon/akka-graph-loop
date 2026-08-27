@@ -1,7 +1,10 @@
-namespace AkkaGraphLoop.Viewer;
+namespace AkkaGraphLoop.Core.Pdsa;
 
-/// <summary>뷰어 페이지(자체 포함: 외부 CDN 없이 vanilla JS + SVG 포스 레이아웃).</summary>
-internal static class ViewerHtml
+/// <summary>
+/// PDSA 그래프 뷰어 페이지(자체 포함: 외부 CDN 없이 vanilla JS + SVG 포스 레이아웃).
+/// 독립 실행 <c>AkkaGraphLoop.Viewer</c> 와 <c>pdsa view</c> 인프로세스 서버가 공유한다.
+/// </summary>
+public static class PdsaViewerHtml
 {
     public const string Page = """
 <!doctype html>
