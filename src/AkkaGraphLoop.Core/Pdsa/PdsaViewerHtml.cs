@@ -92,7 +92,7 @@ const projectSel=document.getElementById("projectSel");
 const projName=document.getElementById("projName");
 const dbPath=document.getElementById("dbPath");
 const hitRate=document.getElementById("hitRate");
-let nodes=[], edges=[], W=800, H=600, dragging=null, raf=null;
+let nodes=[], edges=[], W=800, H=600, dragging=null, raf=null, alpha=0;
 
 // 프로젝트 목록을 채우고 현재 프로젝트를 선택한다.
 async function loadProjects(){
@@ -149,8 +149,18 @@ function initGraph(data){
   startSim();
 }
 
-function startSim(){ let ticks=0; cancelAnimationFrame(raf);
-  const step=()=>{ physics(); render(); if(++ticks<600 && !dragging) raf=requestAnimationFrame(step); else render(); };
+// 시뮬레이티드 어닐링(d3-force 방식): alpha 를 1→0 으로 냉각하며 힘을 점점 약하게 준다.
+// 냉각이 끝나면(또는 움직임이 미미하면) 애니메이션을 '정지'해 안정된 배치를 보여준다.
+// 자석(척력)·용수철(NEXT/HAS_PHASE 연결)·중심 인력은 유지되며, 다만 무한히 흔들리지 않는다.
+const ALPHA_MIN=0.02, ALPHA_DECAY=0.975, V_DECAY=0.82, V_MAX=12;
+function startSim(a=1){ alpha=a; cancelAnimationFrame(raf);
+  const step=()=>{
+    physics();
+    render();
+    alpha*=ALPHA_DECAY;                       // 냉각
+    if(alpha>ALPHA_MIN && !dragging){ raf=requestAnimationFrame(step); }
+    else { alpha=0; for(const n of nodes){ n.vx=n.vy=0; } render(); }  // 수렴 → 정지
+  };
   raf=requestAnimationFrame(step);
 }
 
@@ -164,7 +174,10 @@ function physics(){
   for(const e of edges){ let dx=e.t.x-e.s.x, dy=e.t.y-e.s.y; let d=Math.sqrt(dx*dx+dy*dy)||0.01;
     const f=(d-spring)*0.02; const ux=dx/d, uy=dy/d; e.s.fx+=ux*f; e.s.fy+=uy*f; e.t.fx-=ux*f; e.t.fy-=uy*f; }
   for(const n of nodes){ if(n===dragging) continue; if(n.kind==="Run"||n.kind==="Project"){ continue; }
-    n.vx=(n.vx+n.fx)*0.85; n.vy=(n.vy+n.fy)*0.85; n.x+=n.vx; n.y+=n.vy;
+    // 힘에 alpha 를 곱해 점점 약하게 → 냉각과 함께 정지. 속도 상한으로 폭주(진동) 방지.
+    n.vx=(n.vx+n.fx*alpha)*V_DECAY; n.vy=(n.vy+n.fy*alpha)*V_DECAY;
+    const sp=Math.hypot(n.vx,n.vy); if(sp>V_MAX){ n.vx=n.vx/sp*V_MAX; n.vy=n.vy/sp*V_MAX; }
+    n.x+=n.vx; n.y+=n.vy;
     n.x=Math.max(40,Math.min(W-40,n.x)); n.y=Math.max(40,Math.min(H-40,n.y)); }
 }
 
@@ -220,7 +233,7 @@ function showPanel(n){
 
 function startDrag(ev,n){ dragging=n; cancelAnimationFrame(raf);
   const move=e=>{ const r=svg.getBoundingClientRect(); n.x=e.clientX-r.left; n.y=e.clientY-r.top; render(); };
-  const up=()=>{ dragging=null; document.removeEventListener("mousemove",move); document.removeEventListener("mouseup",up); startSim(); };
+  const up=()=>{ dragging=null; document.removeEventListener("mousemove",move); document.removeEventListener("mouseup",up); startSim(0.3); };  // 드래그 후엔 살짝만 재정렬
   document.addEventListener("mousemove",move); document.addEventListener("mouseup",up); ev.preventDefault();
 }
 
