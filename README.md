@@ -218,3 +218,9 @@ npm/                        # npm packaging: main launcher (@webnori/pdsa) + ass
 .github/workflows/          # release.yml — AOT build (3 platforms) → npm publish
 tests/AkkaGraphLoop.Tests/  # xUnit + Akka TestKit
 ```
+
+## Related reading
+
+- **[PDSA — History, Theory, and the Quality Legacy](PDSA.md)** — why this project is built on PDSA: Shewhart
+  → Deming → Japan's quality rise (Toyota, Nintendo) → the West re-learning quality, and **PDCA vs. PDSA**.
+  Fact-checked. (한국어: [PDSA-ko.md](PDSA-ko.md))

@@ -359,3 +359,9 @@ tests/AkkaGraphLoop.Tests/
   FanInOutTests.cs / PartialGraphTests.cs / CycleTests.cs
   TuiSceneTests.cs / PdsaTests.cs / PdsaGraphStoreTests.cs
 ```
+
+## 관련 자료
+
+- **[PDSA — 역사적 배경, 이론, 그리고 품질의 유산](PDSA-ko.md)** — 이 프로젝트가 왜 PDSA 위에 세워졌는가:
+  슈와트 → 데밍 → 일본의 품질 부상(도요타·닌텐도) → 뒤늦게 다시 배우는 서구, 그리고 **PDCA vs PDSA**.
+  사실검증 완료. (English: [PDSA.md](PDSA.md))

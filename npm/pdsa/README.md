@@ -96,6 +96,10 @@ pdsa --lang ko <command>     # this invocation only  (or env PDSA_LANG=ko)
 Priority: `--lang` > `PDSA_LANG` > `config lang` > OS locale > default `en`. The chosen language drives both
 the **help** and the **coaching text that gets recorded**.
 
+## Related reading
+- **PDSA — History, Theory, and the Quality Legacy** (why this is built on PDSA; PDCA vs. PDSA, fact-checked):
+  https://github.com/psmon/akka-graph-loop/blob/main/PDSA.md
+
 ## Links
 - Repo · full docs (EN/KO): https://github.com/psmon/akka-graph-loop
 - 한국어 README: https://github.com/psmon/akka-graph-loop/blob/main/npm/pdsa/README-ko.md

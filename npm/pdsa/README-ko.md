@@ -91,6 +91,10 @@ pdsa --lang en <명령>        # 이번 호출만 영어
 우선순위: `--lang` > `PDSA_LANG` > `config lang` > OS 로케일 > 기본 `en`.
 선택한 언어로 **도움말**과 **기록되는 코칭 문구**가 함께 표시된다.
 
+## 관련 자료
+- **PDSA — 역사적 배경, 이론, 그리고 품질의 유산** (이 프로젝트가 PDSA 위에 세워진 이유, PDCA vs PDSA, 사실검증):
+  https://github.com/psmon/akka-graph-loop/blob/main/PDSA-ko.md
+
 ## 링크
 - 저장소 · 전체 문서(한/영): https://github.com/psmon/akka-graph-loop
 - English README: https://github.com/psmon/akka-graph-loop/blob/main/npm/pdsa/README.md
