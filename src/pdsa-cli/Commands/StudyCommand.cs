@@ -30,7 +30,7 @@ public sealed class StudyCommand : ICliCommand
         var plan = planPhase?.Input ?? "";
         var done = s.Workflow.GetPhase(cid, PdsaWorkflow.DoKind)?.Input ?? "";
 
-        var judgment = await s.Coach.JudgeAsync(expected, plan, done, study, ct);
+        var judgment = await Spinner.RunAsync("판정 중", c => s.Coach.JudgeAsync(expected, plan, done, study, c), ct);
         s.Workflow.RecordPhase(cid, PdsaWorkflow.StudyKind, study, judgment.Narrative,
             new Dictionary<string, string> { ["verdict"] = judgment.Verdict, ["actual"] = judgment.Actual });
 

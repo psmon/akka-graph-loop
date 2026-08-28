@@ -27,7 +27,7 @@ public sealed class PlanCommand : ICliCommand
         var reinforceOf = ArgUtil.Flag(args, "--fresh") ? 0 : s.Workflow.PendingReinforceTarget();
         var cid = s.Workflow.StartCycle(reinforceOf);
 
-        var coaching = await s.Coach.HypothesisAsync(plan, ct);
+        var coaching = await Spinner.RunAsync("코칭 중", c => s.Coach.HypothesisAsync(plan, c), ct);
         var expected = ArgUtil.Option(args, "--expect") ?? coaching.Expected;
         s.Workflow.RecordPhase(cid, PdsaWorkflow.PlanKind, plan, coaching.Narrative,
             new Dictionary<string, string> { ["expected"] = expected });

@@ -13,7 +13,7 @@ public sealed class ConfigCommand : ICliCommand
     public string Summary => "LLM 키/모델 설정(분리) — 키 직접 또는 파일 위치";
     public string Usage =>
         "pdsa config key <키> | key-file <파일> | model <모델> | reasoning <none|low|medium|high|xhigh|max> | base-url <URL> "
-        + "| provider <local|openai-compat [URL]|openai> | auth <apikey|oauth|none|codex|claude-cli> | claude-cli-path <경로> | allow-insecure-no-auth <true|false> "
+        + "| provider <local|openai-compat [URL]|openai> | auth <apikey|oauth|none|codex|claude-cli> | claude-cli-path <경로> | claude-cli-timeout <초> | allow-insecure-no-auth <true|false> "
         + "| oauth <endpoint|device-endpoint|client|refresh-token|refresh-token-file> <값> | login | lang <en|ko|auto> | show";
 
     public async Task<int> RunAsync(string[] args, CancellationToken ct)
@@ -89,6 +89,12 @@ public sealed class ConfigCommand : ICliCommand
                 if (string.IsNullOrWhiteSpace(value)) return Fail("사용법: pdsa config claude-cli-path <경로>");
                 if (!File.Exists(value)) Console.WriteLine($"주의: 파일이 아직 없습니다: {value}");
                 Console.WriteLine($"저장됨(claude-cli-path): {OpenAiConfig.SetClaudeCliPath(value)}");
+                break;
+            case "claude-cli-timeout":
+                if (!int.TryParse(value, out var timeoutSec) || timeoutSec <= 0)
+                    return Fail("사용법: pdsa config claude-cli-timeout <초>   (양의 정수)");
+                Console.WriteLine($"저장됨(claude-cli-timeout={timeoutSec}s): {OpenAiConfig.SetClaudeCliTimeout(timeoutSec)}");
+                Console.WriteLine($"  유효 타임아웃: {ClaudeTimeoutDesc()}");
                 break;
             case "lang":
                 if (value is not ("en" or "ko" or "auto"))
@@ -175,7 +181,22 @@ public sealed class ConfigCommand : ICliCommand
         Console.WriteLine($"lang      : {langCfg}  (effective: {PdsaLang.Resolve(System.Array.Empty<string>())})");
         Console.WriteLine($"reasoning : {reasoning}");
         Console.WriteLine($"api_key   : {masked}  ({source})");
+        if (auth.StartsWith("claude-cli", StringComparison.OrdinalIgnoreCase))
+            Console.WriteLine($"cli-timeout: {ClaudeTimeoutDesc()}");
         Console.WriteLine($"상태      : {(ok ? "설정됨 — `pdsa check` 로 호출 확인" : "미설정")}");
+    }
+
+    /// <summary>유효 claude -p 타임아웃과 그 출처(env/config/default)를 한 줄로.</summary>
+    private static string ClaudeTimeoutDesc()
+    {
+        var env = Environment.GetEnvironmentVariable("PDSA_CLAUDE_TIMEOUT_SEC");
+        var cfg = OpenAiConfig.ReadClaudeCliTimeoutSec();
+        var effective = (int)ClaudeCli.ResolveTimeout().TotalSeconds;
+        var source =
+            int.TryParse(env?.Trim(), out var e) && e > 0 ? "env PDSA_CLAUDE_TIMEOUT_SEC"
+            : cfg is int c && c > 0 ? "config claude_cli_timeout_sec"
+            : $"기본 {ClaudeCli.DefaultTimeoutSec}s";
+        return $"{effective}s ({source})";
     }
 
     private static AuthMode ParseAuth(string v) => v switch

@@ -12,16 +12,19 @@ namespace PdsaCli.Llm;
 public sealed class ClaudeCliClient : ILlmClient
 {
     private readonly string _model;
+    private readonly TimeSpan _timeout;
     private readonly Func<string, IReadOnlyList<string>, string, CancellationToken, Task<(int Exit, string Stdout, string Stderr)>> _run;
     private readonly Func<string?> _resolveExe;
 
     public ClaudeCliClient(string? model = null,
         Func<string, IReadOnlyList<string>, string, CancellationToken, Task<(int, string, string)>>? runner = null,
-        Func<string?>? exeResolver = null)
+        Func<string?>? exeResolver = null,
+        TimeSpan? timeout = null)
     {
         _model = model ?? "";
         _run = runner ?? RunProcessAsync;
         _resolveExe = exeResolver ?? ClaudeCli.Resolve;
+        _timeout = timeout ?? ClaudeCli.ResolveTimeout();
     }
 
     public async Task<string> CompleteAsync(string systemPrompt, string userPrompt, CancellationToken ct = default)
@@ -34,7 +37,20 @@ public sealed class ClaudeCliClient : ILlmClient
         var args = new List<string> { "-p", "--output-format", "json", "--max-turns", "1", "--append-system-prompt", systemPrompt };
         if (UsesClaudeModel(_model)) { args.Add("--model"); args.Add(_model); }
 
-        var (exit, stdout, stderr) = await _run(exe, args, userPrompt, ct);
+        using var timeoutCts = CancellationTokenSource.CreateLinkedTokenSource(ct);
+        if (_timeout > TimeSpan.Zero) timeoutCts.CancelAfter(_timeout);
+        int exit; string stdout, stderr;
+        try
+        {
+            (exit, stdout, stderr) = await _run(exe, args, userPrompt, timeoutCts.Token);
+        }
+        // 타임아웃(내부 CTS 발화)과 사용자 취소(외부 ct)를 구분: 후자는 그대로 전파.
+        catch (OperationCanceledException) when (timeoutCts.IsCancellationRequested && !ct.IsCancellationRequested)
+        {
+            throw new TimeoutException(
+                $"claude -p 응답이 {_timeout.TotalSeconds:0}s 내에 오지 않아 중단했습니다. " +
+                "조정: pdsa config claude-cli-timeout <초>  또는 env PDSA_CLAUDE_TIMEOUT_SEC");
+        }
         if (exit != 0 && stdout.Trim().Length == 0)
             throw new InvalidOperationException($"claude -p 실행 실패(exit {exit}): {Truncate(stderr, 300)}");
 
@@ -85,12 +101,21 @@ public sealed class ClaudeCliClient : ILlmClient
 
         using var proc = new Process { StartInfo = psi };
         proc.Start();
-        await proc.StandardInput.WriteAsync(stdin.AsMemory(), ct);
-        proc.StandardInput.Close();
-        var stdoutTask = proc.StandardOutput.ReadToEndAsync(ct);
-        var stderrTask = proc.StandardError.ReadToEndAsync(ct);
-        await proc.WaitForExitAsync(ct);
-        return (proc.ExitCode, await stdoutTask, await stderrTask);
+        try
+        {
+            await proc.StandardInput.WriteAsync(stdin.AsMemory(), ct);
+            proc.StandardInput.Close();
+            var stdoutTask = proc.StandardOutput.ReadToEndAsync(ct);
+            var stderrTask = proc.StandardError.ReadToEndAsync(ct);
+            await proc.WaitForExitAsync(ct);
+            return (proc.ExitCode, await stdoutTask, await stderrTask);
+        }
+        // 타임아웃/취소 시 매달린 claude 프로세스(및 자식)를 정리해 좀비·토큰 소모를 막는다.
+        catch (OperationCanceledException)
+        {
+            try { if (!proc.HasExited) proc.Kill(entireProcessTree: true); } catch { /* 이미 종료/권한 등 무시 */ }
+            throw;
+        }
     }
 
     private static string? Str(JsonElement e, string name)

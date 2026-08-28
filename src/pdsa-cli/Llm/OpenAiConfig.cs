@@ -270,6 +270,11 @@ public static class OpenAiConfig
     public static string? ReadClaudeCliPath() => ReadGlobalString("claude_cli_path");
     public static string SetClaudeCliPath(string path) => Update(o => o["claude_cli_path"] = Path.GetFullPath(path));
 
+    /// <summary>claude -p 타임아웃(초). 문자열로 저장하고 정수 파싱(양수만 유효, 그 외 null).</summary>
+    public static int? ReadClaudeCliTimeoutSec()
+        => int.TryParse(ReadGlobalString("claude_cli_timeout_sec"), out var s) && s > 0 ? s : null;
+    public static string SetClaudeCliTimeout(int sec) => Update(o => o["claude_cli_timeout_sec"] = sec.ToString());
+
     private static string? ReadRepoString(string? repoPath, string name)
     {
         if (repoPath is null || !File.Exists(repoPath)) return null;

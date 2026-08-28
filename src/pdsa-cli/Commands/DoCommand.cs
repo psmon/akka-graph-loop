@@ -23,7 +23,7 @@ public sealed class DoCommand : ICliCommand
 
         var cid = cur.Value.Id;
         var plan = s.Workflow.GetPhase(cid, PdsaWorkflow.PlanKind)?.Input ?? "";
-        var organized = await s.Coach.OrganizeDoAsync(plan, done, ct);
+        var organized = await Spinner.RunAsync("코칭 중", c => s.Coach.OrganizeDoAsync(plan, done, c), ct);
         s.Workflow.RecordPhase(cid, PdsaWorkflow.DoKind, done, organized);
 
         Console.WriteLine($"■ [{s.Project}] 사이클 #{cid} — Do 기록됨");

@@ -31,7 +31,7 @@ public sealed class ActCommand : ICliCommand
         var verdict = studyPhase?.Verdict ?? "";
         var note = ArgUtil.Option(args, "--note") ?? "";
 
-        var coaching = await s.Coach.NextActionAsync(plan, done, study, verdict, ct);
+        var coaching = await Spinner.RunAsync("코칭 중", c => s.Coach.NextActionAsync(plan, done, study, verdict, c), ct);
 
         // 보강 여부: 명시 --reinforce 우선, 없으면 코치 판단.
         var manual = ArgUtil.Flag(args, "--reinforce");

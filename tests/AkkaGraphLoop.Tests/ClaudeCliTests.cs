@@ -93,6 +93,44 @@ public class ClaudeCliTests
         Assert.Contains("claude", ex.Message);
     }
 
+    // ── 타임아웃 ────────────────────────────────────────────────────────────
+    [Fact]
+    public async Task CompleteAsync_times_out_with_friendly_message()
+    {
+        // runner 가 타임아웃보다 오래 끌면(내부 CTS 발화) TimeoutException + 조정 안내.
+        var client = new ClaudeCliClient(
+            runner: async (e, a, s, ct) => { await Task.Delay(Timeout.Infinite, ct); return (0, "", ""); },
+            exeResolver: () => "claude",
+            timeout: TimeSpan.FromMilliseconds(50));
+
+        var ex = await Assert.ThrowsAsync<TimeoutException>(() => client.CompleteAsync("s", "u"));
+        Assert.Contains("claude-cli-timeout", ex.Message);   // 조정 방법 안내 포함
+    }
+
+    [Fact]
+    public async Task CompleteAsync_user_cancel_is_not_timeout()
+    {
+        // 외부 ct(사용자 Ctrl+C) 취소는 TimeoutException 이 아니라 OperationCanceledException.
+        using var cts = new CancellationTokenSource();
+        var client = new ClaudeCliClient(
+            runner: async (e, a, s, ct) => { await Task.Delay(Timeout.Infinite, ct); return (0, "", ""); },
+            exeResolver: () => "claude",
+            timeout: TimeSpan.FromSeconds(30));   // 넉넉 — 타임아웃보다 취소가 먼저
+
+        var task = client.CompleteAsync("s", "u", cts.Token);
+        cts.Cancel();
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => task);
+    }
+
+    [Theory]
+    [InlineData("5", 10, 5)]     // env 우선
+    [InlineData(null, 10, 10)]   // env 없으면 config
+    [InlineData(null, null, 180)]// 둘 다 없으면 기본
+    [InlineData("0", 10, 10)]    // env 0/음수는 무시 → config
+    [InlineData("bad", null, 180)] // env 파싱실패 → 기본
+    public void ParseTimeout_precedence_env_then_config_then_default(string? env, int? cfg, int expectedSec)
+        => Assert.Equal(TimeSpan.FromSeconds(expectedSec), ClaudeCli.ParseTimeout(env, cfg, 180));
+
     // claude -p 는 에이전트 서두/잡음을 앞에 붙일 수 있다 — PdsaCoach 태그 파서가 그래도 태그를 추출해야 한다.
     [Fact]
     public void Coach_tag_parser_survives_agent_preamble_noise()

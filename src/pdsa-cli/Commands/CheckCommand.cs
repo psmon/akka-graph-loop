@@ -28,9 +28,9 @@ public sealed class CheckCommand : ICliCommand
         var sw = Stopwatch.StartNew();
         try
         {
-            var reply = await llm.CompleteAsync(
+            var reply = await Spinner.RunAsync("LLM 확인 중", c => llm.CompleteAsync(
                 "You are a health check. Reply with exactly: OK",
-                "정상 동작하면 'OK' 한 단어만 답하세요.", ct);
+                "정상 동작하면 'OK' 한 단어만 답하세요.", c), ct);
             sw.Stop();
             Console.WriteLine($"✔ 성공 ({sw.ElapsedMilliseconds}ms). 응답: {Trim(reply)}");
             return 0;

@@ -38,7 +38,7 @@ public sealed class GuideCommand : ICliCommand
         try
         {
             Console.WriteLine($"(model: {options.Model})");
-            var answer = await llm.CompleteAsync(SystemPrompt, prompt, ct);
+            var answer = await Spinner.RunAsync("질의 중", c => llm.CompleteAsync(SystemPrompt, prompt, c), ct);
             Console.WriteLine();
             Console.WriteLine(answer);
             return 0;

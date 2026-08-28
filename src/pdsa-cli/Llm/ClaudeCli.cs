@@ -20,6 +20,24 @@ public static class ClaudeCli
 
     public static bool IsAvailable() => Resolve() is not null;
 
+    /// <summary>기본 타임아웃(초). CLI 시작지연이 있어도 넉넉히, 그러나 무한 hang 은 막는다.</summary>
+    public const int DefaultTimeoutSec = 180;
+
+    /// <summary>claude -p 호출 타임아웃. 우선순위: <c>PDSA_CLAUDE_TIMEOUT_SEC</c> env &gt; config <c>claude_cli_timeout_sec</c> &gt; 기본 180s.</summary>
+    public static TimeSpan ResolveTimeout()
+        => ParseTimeout(
+            Environment.GetEnvironmentVariable("PDSA_CLAUDE_TIMEOUT_SEC"),
+            OpenAiConfig.ReadClaudeCliTimeoutSec(),
+            DefaultTimeoutSec);
+
+    /// <summary>타임아웃 해석(순수): env(문자열) &gt; config(정수) &gt; 기본. 0/음수/파싱실패는 무시하고 다음 후보로.</summary>
+    internal static TimeSpan ParseTimeout(string? env, int? cfg, int defSec)
+    {
+        if (int.TryParse(env?.Trim(), out var e) && e > 0) return TimeSpan.FromSeconds(e);
+        if (cfg is int c && c > 0) return TimeSpan.FromSeconds(c);
+        return TimeSpan.FromSeconds(defSec);
+    }
+
     private static string? FindOnPath()
     {
         var path = Environment.GetEnvironmentVariable("PATH");
