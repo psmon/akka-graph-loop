@@ -1,0 +1,11 @@
+---
+// Adds a text "Docs" link to the top-right header, then renders the built-in
+// social icons (GitHub · Facebook · LinkedIn) from the Starlight config.
+import Default from '@astrojs/starlight/components/SocialIcons.astro';
+
+const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+const docsHref = `${base}/getting-started/installation/`;
+---
+
+<a class="pdsa-docs-link" href={docsHref}>Docs</a>
+<Default><slot /></Default>

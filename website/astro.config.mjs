@@ -19,13 +19,17 @@ export default defineConfig({
         replacesTitle: false,
       },
       // White / light mode only — hide the theme switcher and force the light palette.
+      // SocialIcons is overridden to add a text "Docs" link in the top-right header.
       components: {
         ThemeSelect: './src/components/EmptyThemeSelect.astro',
         ThemeProvider: './src/components/LightThemeProvider.astro',
+        SocialIcons: './src/components/SocialIcons.astro',
       },
       customCss: ['./src/styles/theme.css'],
       social: [
         { icon: 'github', label: 'GitHub', href: GITHUB },
+        { icon: 'facebook', label: 'Akka Labs (Facebook group)', href: 'https://www.facebook.com/groups/akkalabs' },
+        { icon: 'linkedin', label: 'psmon · LinkedIn', href: 'https://www.linkedin.com/in/psmon/' },
       ],
       editLink: {
         baseUrl: `${GITHUB}/edit/main/website/`,
