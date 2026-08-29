@@ -1,0 +1,40 @@
+---
+title: Graph Viewer
+description: Visualize the recorded PDSA graph in a local, self-contained web viewer — verdict-colored Study nodes, REINFORCES edges, and a hit-rate badge.
+---
+
+import viewerPng from '../../../assets/pdsa-view.png';
+
+`pdsa view` opens a local visual explorer of the recorded graph.
+
+```bash
+pdsa view
+# dev tree: dotnet run --project src/pdsa-cli -- view
+```
+
+<figure class="pdsa-figure">
+  <img src={viewerPng.src} alt="pdsa view — a project switcher, verdict-colored Study nodes, a REINFORCES edge, and a hit-rate badge." />
+  <figcaption>Study nodes colored by verdict, a REINFORCES edge, a project switcher, and a hit-rate badge.</figcaption>
+</figure>
+
+## What you get
+
+- **Study nodes colored by verdict** — <span class="verdict met">met</span>,
+  <span class="verdict partial">partial</span>, <span class="verdict unmet">unmet</span>.
+- **`REINFORCES` edges** linking follow-up cycles to the ones they reinforce.
+- A **project switcher** to hop between per-project graphs.
+- A live **expectation hit-rate** ([recall](/akka-graph-loop/concepts/recall/)) badge.
+
+## How it works
+
+The viewer is a small, **self-contained** page: vanilla JS + an SVG force layout, with **no external CDN**.
+It reads the Kùzu database **read-only** and serves a `/api/graph` JSON payload on a local port.
+
+- Historically a separate ASP.NET Core minimal-API project (`AkkaGraphLoop.Viewer`).
+- The CLI now serves the viewer **in-process**, so `pdsa view` works even from the AOT single-file install —
+  no separate executable required.
+
+:::note
+The viewer only **reads** the graph, so it's safe to open while you continue recording cycles from another
+terminal.
+:::

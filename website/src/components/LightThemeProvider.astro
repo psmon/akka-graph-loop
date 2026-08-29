@@ -1,0 +1,11 @@
+---
+// Force the light palette everywhere and ignore any stored/system preference.
+---
+<script is:inline>
+  document.documentElement.dataset.theme = 'light';
+  try {
+    localStorage.setItem('starlight-theme', 'light');
+  } catch (e) {
+    /* storage unavailable — light is still applied via data-theme above */
+  }
+</script>

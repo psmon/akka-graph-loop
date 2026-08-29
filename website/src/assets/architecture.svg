@@ -1,0 +1,57 @@
+<svg viewBox="0 0 900 430" xmlns="http://www.w3.org/2000/svg" role="img"
+     aria-label="Architecture: the pdsa CLI, graph viewer, and samples all build on the shared AkkaGraphLoop.Core, which sits on the Kùzu graph DB and pluggable LLM providers"
+     font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif">
+  <defs>
+    <marker id="da" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0 0 L10 5 L0 10 z" fill="#5a6c74"/>
+    </marker>
+  </defs>
+
+  <!-- top consumers -->
+  <g>
+    <rect x="55" y="24" width="230" height="92" rx="14" fill="#0e7c8b"/>
+    <text x="170" y="58" text-anchor="middle" font-size="16" font-weight="800" fill="#eaf7f9">pdsa CLI</text>
+    <text x="170" y="80" text-anchor="middle" font-size="11.5" fill="#d3eef2">Native AOT single exe</text>
+    <text x="170" y="97" text-anchor="middle" font-size="11.5" fill="#d3eef2">plan · do · study · act …</text>
+
+    <rect x="335" y="24" width="230" height="92" rx="14" fill="#1f4e63"/>
+    <text x="450" y="58" text-anchor="middle" font-size="16" font-weight="800" fill="#eaf7f9">Graph Viewer</text>
+    <text x="450" y="80" text-anchor="middle" font-size="11.5" fill="#bcdbe3">ASP.NET minimal API</text>
+    <text x="450" y="97" text-anchor="middle" font-size="11.5" fill="#bcdbe3">SVG force layout · local port</text>
+
+    <rect x="615" y="24" width="230" height="92" rx="14" fill="#2a6475"/>
+    <text x="730" y="58" text-anchor="middle" font-size="16" font-weight="800" fill="#eaf7f9">Samples + TUI</text>
+    <text x="730" y="80" text-anchor="middle" font-size="11.5" fill="#c9e6ec">Akka.Streams graph learning</text>
+    <text x="730" y="97" text-anchor="middle" font-size="11.5" fill="#c9e6ec">ASCII tutorial · -- pdsa demo</text>
+  </g>
+
+  <!-- arrows down to core -->
+  <g fill="none" stroke="#5a6c74" stroke-width="2.4">
+    <line x1="170" y1="116" x2="170" y2="176" marker-end="url(#da)"/>
+    <line x1="450" y1="116" x2="450" y2="176" marker-end="url(#da)"/>
+    <line x1="730" y1="116" x2="730" y2="176" marker-end="url(#da)"/>
+  </g>
+
+  <!-- core -->
+  <rect x="55" y="178" width="790" height="86" rx="16" fill="#ffffff" stroke="#0e7c8b" stroke-width="2.5"/>
+  <text x="450" y="212" text-anchor="middle" font-size="17" font-weight="800" fill="#0f2b3a">AkkaGraphLoop.Core</text>
+  <text x="450" y="236" text-anchor="middle" font-size="12" fill="#35474f">PDSA engine (Akka.Streams feedback cycle) · PdsaWorkflow (agent memory) · readers</text>
+  <text x="450" y="253" text-anchor="middle" font-size="12" fill="#35474f">Kùzu interop (C API via P/Invoke)</text>
+
+  <!-- arrows down to foundations -->
+  <g fill="none" stroke="#5a6c74" stroke-width="2.4">
+    <line x1="280" y1="264" x2="280" y2="322" marker-end="url(#da)"/>
+    <line x1="620" y1="264" x2="620" y2="322" marker-end="url(#da)"/>
+  </g>
+
+  <!-- foundations -->
+  <rect x="55" y="324" width="450" height="82" rx="14" fill="#e8f5f7" stroke="#cfeaf0" stroke-width="1.6"/>
+  <text x="280" y="356" text-anchor="middle" font-size="15" font-weight="800" fill="#0a6472">Kùzu embedded graph DB</text>
+  <text x="280" y="378" text-anchor="middle" font-size="11.5" fill="#0a5a66">in-process · Cypher · one DB per project</text>
+  <text x="280" y="394" text-anchor="middle" font-size="11.5" fill="#0a5a66">libkuzu auto-downloaded at build (not committed)</text>
+
+  <rect x="525" y="324" width="320" height="82" rx="14" fill="#fdf3e0" stroke="#f7e2bd" stroke-width="1.6"/>
+  <text x="685" y="356" text-anchor="middle" font-size="15" font-weight="800" fill="#a86710">LLM providers (pluggable)</text>
+  <text x="685" y="378" text-anchor="middle" font-size="11.5" fill="#7a4d08">OpenAI · open-weight · OAuth</text>
+  <text x="685" y="394" text-anchor="middle" font-size="11.5" fill="#7a4d08">Codex · Claude CLI</text>
+</svg>

@@ -1,0 +1,93 @@
+<svg viewBox="0 0 900 480" xmlns="http://www.w3.org/2000/svg" role="img"
+     aria-label="The PDSA loop accumulating into a per-project graph memory" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif">
+  <defs>
+    <marker id="ah" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0 0 L10 5 L0 10 z" fill="#5a6c74"/>
+    </marker>
+    <marker id="ahT" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0 0 L10 5 L0 10 z" fill="#0e7c8b"/>
+    </marker>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="6" stdDeviation="9" flood-color="#0f2b3a" flood-opacity="0.14"/>
+    </filter>
+  </defs>
+
+  <!-- ── PDSA ring ──────────────────────────────────────────── -->
+  <g transform="translate(0,0)">
+    <!-- clockwise curved connectors -->
+    <g fill="none" stroke="#5a6c74" stroke-width="2.4">
+      <path d="M300 128 A140 140 0 0 1 372 200" marker-end="url(#ah)"/>
+      <path d="M372 280 A140 140 0 0 1 300 352" marker-end="url(#ah)"/>
+      <path d="M200 352 A140 140 0 0 1 128 280" marker-end="url(#ah)"/>
+      <path d="M128 200 A140 140 0 0 1 200 128" marker-end="url(#ah)"/>
+    </g>
+
+    <!-- center -->
+    <circle cx="250" cy="240" r="58" fill="#ffffff" stroke="#e7ecef" stroke-width="2"/>
+    <text x="250" y="234" text-anchor="middle" font-size="26" font-weight="800" fill="#0f2b3a">PDSA</text>
+    <text x="250" y="258" text-anchor="middle" font-size="13" fill="#5a6c74">continuous loop</text>
+
+    <!-- PLAN (top) -->
+    <g filter="url(#soft)">
+      <circle cx="250" cy="98" r="46" fill="#1f4e63"/>
+    </g>
+    <text x="250" y="94" text-anchor="middle" font-size="15" font-weight="700" fill="#eaf7f9">PLAN</text>
+    <text x="250" y="112" text-anchor="middle" font-size="10.5" fill="#bcdbe3">expected</text>
+
+    <!-- DO (right) -->
+    <g filter="url(#soft)">
+      <circle cx="402" cy="240" r="46" fill="#0e7c8b"/>
+    </g>
+    <text x="402" y="236" text-anchor="middle" font-size="15" font-weight="700" fill="#eaf7f9">DO</text>
+    <text x="402" y="254" text-anchor="middle" font-size="10.5" fill="#d3eef2">execute</text>
+
+    <!-- STUDY (bottom) — highlighted amber -->
+    <g filter="url(#soft)">
+      <circle cx="250" cy="382" r="46" fill="#f0a020"/>
+    </g>
+    <text x="250" y="378" text-anchor="middle" font-size="15" font-weight="800" fill="#3a2600">STUDY</text>
+    <text x="250" y="396" text-anchor="middle" font-size="10.5" fill="#5a3d00">verdict</text>
+
+    <!-- ACT (left) -->
+    <g filter="url(#soft)">
+      <circle cx="98" cy="240" r="46" fill="#2a6475"/>
+    </g>
+    <text x="98" y="236" text-anchor="middle" font-size="15" font-weight="700" fill="#eaf7f9">ACT</text>
+    <text x="98" y="254" text-anchor="middle" font-size="10.5" fill="#c9e6ec">reinforce</text>
+  </g>
+
+  <!-- ── bridge arrow: cycle → graph memory ─────────────────── -->
+  <path d="M470 240 C 520 240, 540 240, 560 240" fill="none" stroke="#0e7c8b" stroke-width="2.6" marker-end="url(#ahT)"/>
+  <text x="515" y="228" text-anchor="middle" font-size="11" fill="#0a6472" font-weight="600">records</text>
+
+  <!-- ── graph memory cluster ───────────────────────────────── -->
+  <g transform="translate(600,120)">
+    <text x="130" y="6" text-anchor="middle" font-size="13" font-weight="700" fill="#0f2b3a">per-project graph memory</text>
+    <text x="130" y="24" text-anchor="middle" font-size="10.5" fill="#5a6c74">Kùzu · Cypher</text>
+
+    <!-- edges -->
+    <g stroke="#9fd6de" stroke-width="2" fill="none">
+      <line x1="60" y1="70" x2="140" y2="60"/>
+      <line x1="140" y1="60" x2="210" y2="95"/>
+      <line x1="140" y1="60" x2="120" y2="150"/>
+      <line x1="120" y1="150" x2="60" y2="70"/>
+      <line x1="120" y1="150" x2="205" y2="170"/>
+      <line x1="210" y1="95" x2="205" y2="170"/>
+      <line x1="60" y1="70" x2="45" y2="165"/>
+      <line x1="45" y1="165" x2="120" y2="150"/>
+    </g>
+    <!-- nodes: cycles/phases, one Study amber -->
+    <g>
+      <circle cx="60" cy="70" r="15" fill="#1f4e63"/>
+      <circle cx="140" cy="60" r="15" fill="#0e7c8b"/>
+      <circle cx="210" cy="95" r="15" fill="#f0a020"/>
+      <circle cx="120" cy="150" r="15" fill="#2a6475"/>
+      <circle cx="45" cy="165" r="13" fill="#1f4e63"/>
+      <circle cx="205" cy="170" r="13" fill="#0e7c8b"/>
+    </g>
+    <text x="60" y="74" text-anchor="middle" font-size="10" font-weight="700" fill="#eaf7f9">P</text>
+    <text x="140" y="64" text-anchor="middle" font-size="10" font-weight="700" fill="#eaf7f9">D</text>
+    <text x="210" y="99" text-anchor="middle" font-size="10" font-weight="800" fill="#3a2600">S</text>
+    <text x="120" y="154" text-anchor="middle" font-size="10" font-weight="700" fill="#eaf7f9">A</text>
+  </g>
+</svg>

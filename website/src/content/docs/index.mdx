@@ -1,0 +1,113 @@
+---
+title: pdsa
+description: A CLI that backs Deming's Plan-Do-Study-Act loop with graph engineering — every cycle accumulates into a per-project Kùzu graph memory for AI agents.
+template: splash
+hero:
+  tagline: Run your PDSA loop as graph memory. The expected outcome you set in Plan is judged in Study by an LLM — and every cycle accumulates into a per-project graph an AI agent can recall.
+  image:
+    file: ../../assets/hero-loop.svg
+    alt: The PDSA loop accumulating into a per-project graph memory
+  actions:
+    - text: Get Started
+      link: /akka-graph-loop/getting-started/installation/
+      icon: right-arrow
+      variant: primary
+    - text: View on GitHub
+      link: https://github.com/psmon/akka-graph-loop
+      icon: external
+      variant: minimal
+---
+
+import { Card, CardGrid, LinkCard } from '@astrojs/starlight/components';
+import howItWorks from '../../assets/how-it-works.svg';
+import architecture from '../../assets/architecture.svg';
+import viewerPng from '../../assets/pdsa-view.png';
+
+<div class="pdsa-install">
+<span class="c"># Windows x64 · Linux x64 · macOS (Apple Silicon)</span>{"\n"}
+npm i -g <span class="p">@webnori/pdsa</span>{"\n"}
+pdsa version
+</div>
+
+<div class="pdsa-section">
+<p class="pdsa-eyebrow">How it works</p>
+
+## One command per step. One graph that never forgets.
+
+A **PDSA cycle** is four commands. `plan` makes the LLM commit to a *verifiable expected outcome*; `study`
+judges the result against it (**met / partial / unmet**); `act` decides whether to reinforce. Every step is
+written to a **per-project [Kùzu](https://kuzudb.com/) graph DB** — so the learning compounds across runs.
+
+<figure class="pdsa-figure">
+  <img src={howItWorks.src} alt="A pdsa cycle: plan sets an expected evaluation, do executes, study is judged by an LLM, act reinforces, and every step is recorded to the graph DB." />
+  <figcaption>Plan → Do → Study → Act, with a REINFORCES feedback edge — recorded to the graph on every step.</figcaption>
+</figure>
+</div>
+
+<div class="pdsa-section">
+<p class="pdsa-eyebrow">Features</p>
+
+## Built for AI agents that learn on the job
+
+<CardGrid>
+  <Card title="Study, not Check" icon="approve-check">
+    The third step asks *what did we learn?*, not *did it pass?*. An LLM judges the result against the
+    Plan's **expected** evaluation and records a verdict: <span class="verdict met">met</span>
+    <span class="verdict partial">partial</span> <span class="verdict unmet">unmet</span>.
+  </Card>
+  <Card title="Graph memory, per project" icon="seti:db">
+    Every Plan/Do/Study/Act node and `REINFORCES` edge lands in an in-process Kùzu graph DB at
+    `{LocalAppData}/pdsa-cli/{project}/graph.kuzu`. Read it back with Cypher; visualize it with `pdsa view`.
+  </Card>
+  <Card title="Recall as a metric" icon="star">
+    Progress isn't vibes — it's an **expectation hit-rate** (`met / cycles-with-a-verdict`), surfaced in
+    `status`, `eval`, and the viewer.
+  </Card>
+  <Card title="Bring any LLM" icon="puzzle">
+    OpenAI API keys, keyless open-weight endpoints (ollama · vLLM · LM Studio), GPT OAuth, Codex, or your
+    already-logged-in Claude Code (`claude -p`). No LLM? Inputs are still recorded.
+  </Card>
+  <Card title="One native binary" icon="rocket">
+    A **Native AOT single executable** with Akka.NET and Kùzu bundled — shipped to npm as `@webnori/pdsa`
+    for Windows, Linux, and macOS (Apple Silicon).
+  </Card>
+  <Card title="Drop-in for Claude Code" icon="comment">
+    Ships a ready-to-use skill (`.claude/skills/pdsa`). Say "pdsa" in a session and the agent runs its work
+    as Plan→Do→Study→Act, accumulating graph memory. `pdsa init` installs it anywhere.
+  </Card>
+</CardGrid>
+</div>
+
+<div class="pdsa-section">
+<p class="pdsa-eyebrow">Architecture</p>
+
+## A shared core, three consumers, pluggable foundations
+
+The reusable **`AkkaGraphLoop.Core`** (PDSA engine + Kùzu interop) is shared by the CLI, the graph viewer,
+and the learning samples — sitting on the Kùzu embedded graph DB and pluggable LLM providers.
+
+<figure class="pdsa-figure">
+  <img src={architecture.src} alt="The pdsa CLI, graph viewer, and samples all build on AkkaGraphLoop.Core, which sits on the Kùzu graph DB and pluggable LLM providers." />
+</figure>
+</div>
+
+<div class="pdsa-section">
+<p class="pdsa-eyebrow">See it</p>
+
+## Watch the memory grow
+
+`pdsa view` serves a local, self-contained viewer of the recorded graph — Study nodes colored by verdict,
+`REINFORCES` edges, a project switcher, and a live hit-rate badge.
+
+<figure class="pdsa-figure">
+  <img src={viewerPng.src} alt="pdsa view — project switcher, verdict-colored Study nodes, a REINFORCES edge, and a hit-rate badge." />
+  <figcaption>`pdsa view` — verdict-colored Study nodes, REINFORCES edges, and an expectation hit-rate badge.</figcaption>
+</figure>
+
+<CardGrid>
+  <LinkCard title="Install pdsa" description="npm one-liner, or run from a dev tree." href="/akka-graph-loop/getting-started/installation/" />
+  <LinkCard title="Your first cycle" description="Plan → Do → Study → Act, end to end in five minutes." href="/akka-graph-loop/getting-started/first-cycle/" />
+  <LinkCard title="LLM providers & auth" description="OpenAI, open-weight, OAuth, Codex, Claude CLI." href="/akka-graph-loop/llm/providers/" />
+  <LinkCard title="CLI reference" description="Every command, flag, and exit code." href="/akka-graph-loop/cli/overview/" />
+</CardGrid>
+</div>

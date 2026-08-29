@@ -1,0 +1,13 @@
+<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="pdsa">
+  <circle cx="16" cy="16" r="15" fill="#0e7c8b"/>
+  <!-- circular arrows: three teal-tint segments + one amber (Study) -->
+  <g fill="none" stroke-width="3.2" stroke-linecap="round">
+    <path d="M16 6.5 A9.5 9.5 0 0 1 25.5 16" stroke="#cfeaf0"/>
+    <path d="M25.5 16 A9.5 9.5 0 0 1 16 25.5" stroke="#f0a020"/>
+    <path d="M16 25.5 A9.5 9.5 0 0 1 6.5 16" stroke="#9fd6de"/>
+    <path d="M6.5 16 A9.5 9.5 0 0 1 16 6.5" stroke="#eaf7f9"/>
+  </g>
+  <!-- rotation arrowhead near top -->
+  <path d="M16 3.4 l3 3.1 l-3 3.1 z" fill="#eaf7f9"/>
+  <circle cx="16" cy="16" r="2.6" fill="#f0a020"/>
+</svg>
