@@ -30,7 +30,7 @@ public class PdsaCoachTests
     public async Task Null_llm_returns_empty_results()
     {
         var coach = new PdsaCoach(null);
-        Assert.Equal(new PlanCoaching("", ""), await coach.HypothesisAsync("p", default));
+        Assert.Equal(new PlanCoaching("", ""), await coach.HypothesisAsync("p"));
         Assert.Equal("", await coach.OrganizeDoAsync("p", "d", default));
         Assert.Equal(new StudyJudgment("", "", ""), await coach.JudgeAsync("e", "p", "d", "s", default));
         Assert.Equal(new ActCoaching(false, "", ""), await coach.NextActionAsync("p", "d", "s", "unmet", default));
@@ -40,12 +40,32 @@ public class PdsaCoachTests
     public async Task Hypothesis_parses_expected_and_strips_tag_from_narrative()
     {
         var fake = new FakeLlm("기대평가: p95 200ms 이하\n- 코칭 한 줄\n- 가설 한 줄");
-        var r = await new PdsaCoach(fake).HypothesisAsync("계획X", default);
+        var r = await new PdsaCoach(fake).HypothesisAsync("계획X");
 
         Assert.Equal("p95 200ms 이하", r.Expected);
         Assert.DoesNotContain("기대평가:", r.Narrative);
         Assert.Contains("코칭 한 줄", r.Narrative);
         Assert.Contains("계획X", fake.LastUser); // 프롬프트에 원문 포함
+    }
+
+    [Fact]
+    public async Task Hypothesis_injects_prior_learnings_into_prompt()
+    {
+        var fake = new FakeLlm("기대평가: X\n코칭");
+        await new PdsaCoach(fake).HypothesisAsync("계획X", "#3 [unmet]\n  learned: 캐시 무효화 누락", default);
+
+        Assert.Contains("과거 학습", fake.LastUser!);            // 주입 헤더(ko)
+        Assert.Contains("캐시 무효화 누락", fake.LastUser!);      // 주입된 학습 본문
+        Assert.Contains("계획X", fake.LastUser!);                // 원 계획도 유지
+    }
+
+    [Fact]
+    public async Task Hypothesis_without_prior_learnings_omits_injection_block()
+    {
+        var fake = new FakeLlm("기대평가: X\n코칭");
+        await new PdsaCoach(fake).HypothesisAsync("계획X", "   ", default); // 공백만 → 주입 없음
+
+        Assert.DoesNotContain("과거 학습", fake.LastUser!);
     }
 
     [Fact]

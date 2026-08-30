@@ -33,18 +33,25 @@ public sealed class PdsaCoach(ILlmClient? llm, string lang = "ko")
 
     private string SystemPrompt => _ko ? SystemKo : SystemEn;
 
-    /// <summary>Plan 을 코칭하고 검증 가능한 '기대 평가(성공 기준/측정지표)'를 세운다.</summary>
-    public async Task<PlanCoaching> HypothesisAsync(string plan, CancellationToken ct)
+    /// <summary>
+    /// Plan 을 코칭하고 검증 가능한 '기대 평가(성공 기준/측정지표)'를 세운다.
+    /// <paramref name="priorLearnings"/> 가 있으면 누적 그래프 메모리(최근 사이클 학습)를 컨텍스트로
+    /// 주입해 반복 실수를 피하도록 코칭한다(값이 없으면 기존과 동일하게 동작).
+    /// </summary>
+    public async Task<PlanCoaching> HypothesisAsync(string plan, string priorLearnings = "", CancellationToken ct = default)
     {
+        var prior = string.IsNullOrWhiteSpace(priorLearnings) ? "" : (_ko
+            ? "\n\n[과거 학습(최근 사이클 — 반복 실수를 피하도록 참고)]\n" + priorLearnings.Trim()
+            : "\n\n[Prior learnings (recent cycles — use to avoid repeating mistakes)]\n" + priorLearnings.Trim());
         var prompt = _ko
             ? "다음은 어떤 작업의 Plan(계획) 입니다. 대개 계획만 세우고 기대 평가를 빠뜨립니다.\n" +
               "출력 형식(반드시 준수):\n" +
               "  첫 줄: `기대평가: <이 사이클이 성공인지 판정할 검증가능한 기준/측정지표를 한 문장으로>`\n" +
-              "  이후: 계획 코칭 2~3줄과 '만약 ~한다면 ~가 ~만큼 개선된다' 형태의 가설 1~2개.\n\n[Plan]\n" + plan
+              "  이후: 계획 코칭 2~3줄과 '만약 ~한다면 ~가 ~만큼 개선된다' 형태의 가설 1~2개.\n\n[Plan]\n" + plan + prior
             : "The following is a task's Plan. People usually plan but omit the expected outcome.\n" +
               "Output format (must follow):\n" +
               "  First line: `Expected: <one sentence: a verifiable criterion/metric to judge whether this cycle succeeded>`\n" +
-              "  Then: 2-3 lines of plan coaching and 1-2 hypotheses shaped as 'If we do X, then Y improves by Z'.\n\n[Plan]\n" + plan;
+              "  Then: 2-3 lines of plan coaching and 1-2 hypotheses shaped as 'If we do X, then Y improves by Z'.\n\n[Plan]\n" + plan + prior;
         var text = await Ask(prompt, ct);
         if (text.Length == 0) return new PlanCoaching("", "");
         return new PlanCoaching(ParseTag(text, "기대평가", "expected"), StripTags(text));

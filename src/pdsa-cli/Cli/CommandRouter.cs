@@ -119,6 +119,7 @@ public sealed class CommandRouter
         "act" => "Summarize learnings + decide immediate reinforce (end the cycle)",
         "status" => "PDSA progress/accumulated state for the current project",
         "eval" => "Expectation hit-rate (recall) + per-cycle expected/verdict/actual",
+        "recall" => "Recall prior-cycle learnings (planning context); auto-injected into plan",
         "project" => "Set/list the active project (separate multi-project DBs)",
         "view" => "Open the accumulated graph-memory viewer (local port)",
         "config" => "LLM key/model/auth/lang settings — key inline or by file path",

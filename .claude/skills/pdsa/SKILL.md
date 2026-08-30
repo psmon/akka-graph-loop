@@ -41,7 +41,8 @@ description: >-
 
 1. **Plan** — 이번에 할 일을 입력한다.
    `pdsa plan "<무엇을 왜 어떻게 할지>"`
-   → 출력의 **[가설]** 과 **[측정 지표]** 를 읽는다. 그 가설을 검증하는 방향으로 작업을 진행한다.
+   → 출력의 **`기대 평가:`** 한 줄(검증가능한 성공 기준)과 **코칭·가설** 서술을 읽는다. 그 기대 평가를 검증하는 방향으로 작업을 진행한다.
+   → 최근 사이클의 학습이 코칭에 **자동 주입**된다(누적 메모리 되먹임). 끄려면 `--no-recall`.
 2. **Do** — 실제 수행한 내용을 보고한다.
    `pdsa do "<실제로 한 것: 변경/명령/관찰>"`
    → 출력의 **[Plan→Do 정리]** 를 확인한다(계획 대비 차이 파악).
@@ -70,7 +71,24 @@ description: >-
 | `pdsa do "…"` | 수행 보고 → Plan→Do 그래프 정리 |
 | `pdsa study "…"` | 결과 보고 → 학습·개선점 |
 | `pdsa act [--note "…"]` | 다음 개선 액션(사이클 종료) |
+| `pdsa recall ["<주제>"]` | 과거 사이클 학습 되읽기(계획 컨텍스트). plan 이 자동 주입 |
 | `pdsa status` / `pdsa view` | 누적 상태 / 그래프 뷰어 |
 | `pdsa config …` / `pdsa check` / `pdsa models` | LLM 키·모델 설정 / 연결 확인 / 모델 목록 |
 
 전체 도움말: `pdsa`(인자 없이) 또는 `pdsa <명령> --help`.
+
+## 5. 에이전트용 구조화 출력(`--json`) & 메모리 되읽기(`recall`)
+
+프로즈(한국어 코칭)를 정규식으로 긁지 말 것. `plan`/`do`/`study`/`act`/`status`/`eval`/`recall` 에
+**`--json`** 을 붙이면 stdout 에 한 줄 JSON 객체만 방출된다(프로즈 배너 생략, 기본 출력은 불변).
+CLI 가 이미 파싱해 둔 필드를 그대로 노출하므로 파싱이 안정적이다(camelCase).
+
+- `plan --json` → `{project, cycle, reinforceOf, expected, narrative, llmEnabled}`
+- `study --json` → `{project, cycle, expected, verdict, actual, narrative, llmEnabled}` (`verdict` = `met|partial|unmet`)
+- `act --json` → `{project, cycle, reinforce, what, narrative, hitRate:{met,total}, cycleCount, llmEnabled}`
+- `status --json` → 전체(미절삭) 사이클/단계. `eval --json` → 사이클별 기대/판정/실제.
+- `recall ["<주제>"] --json` → `{project, topic, learnings:[{cycle, verdict, expected, actual, study, act}]}`
+
+되읽기: `pdsa recall "<주제>"` 로 관련 과거 학습을 당겨와 계획 전 컨텍스트로 삼는다(주제 생략 시 최근 학습).
+프로즈 상태를 전체로 보려면 `pdsa status --full` / `pdsa eval --full` (절삭 해제).
+`llmEnabled:false` 면 LLM 미설정으로 코칭·판정이 생략된 것(기록만 됨) — 종료코드만 보지 말 것.
