@@ -15,6 +15,13 @@ public sealed record PdsaPhase(
 public sealed record PdsaCycleView(long Id, string Status, string Started, IReadOnlyList<PdsaPhase> Phases, string Verdict = "");
 
 /// <summary>
+/// 한 사이클에서 되읽는 학습 요약(recall 용). <b>미절삭 전체 텍스트</b>를 담아 다음 계획의
+/// LLM 코칭 프롬프트에 되먹이거나 <c>pdsa recall</c> 로 노출한다.
+/// Study/Act = 각 단계의 코칭 서술(학습·개선점 / 다음 액션).
+/// </summary>
+public sealed record PdsaLearning(long Cycle, string Verdict, string Expected, string Actual, string Study, string Act);
+
+/// <summary>
 /// 프로젝트별 PDSA 학습 메모리를 Kùzu 그래프로 누적한다.
 /// 스키마: <c>(:Project)-[:HAS_CYCLE]->(:Cycle)-[:HAS_PHASE]->(:Phase)</c>, 사이클 간 <c>(:Cycle)-[:NEXT]->(:Cycle)</c>.
 /// 사용자 텍스트는 모두 <b>파라미터 바인딩</b>으로 저장한다(이스케이프/인젝션 걱정 없음, 개행 보존).
@@ -180,6 +187,45 @@ public sealed class PdsaWorkflow : IDisposable
             views.Add(new PdsaCycleView(id, c[1], c[2], phases, verdict));
         }
         return views;
+    }
+
+    /// <summary>
+    /// 최근 사이클들의 학습을 되읽는다(recall). 계획만 있고 학습이 없는 사이클은 건너뛴다.
+    /// <paramref name="keyword"/> 가 있으면 단계 입력/서술/기대/실제 텍스트에 부분일치(대소문자 무시)하는
+    /// 사이클만 취한다(더 넓은 창을 스캔한 뒤 <paramref name="limit"/> 개까지). 세만틱 검색은 범위 밖.
+    /// </summary>
+    public IReadOnlyList<PdsaLearning> RecentLearnings(int limit = 3, string? keyword = null)
+    {
+        if (limit <= 0) return Array.Empty<PdsaLearning>();
+        var hasKeyword = !string.IsNullOrWhiteSpace(keyword);
+        // 키워드가 있으면 매칭분을 채우기 위해 더 넓은 창을 스캔한다.
+        var window = hasKeyword ? Math.Max(limit * 5, 25) : limit;
+
+        var result = new List<PdsaLearning>();
+        foreach (var c in Recent(window))
+        {
+            var plan = c.Phases.FirstOrDefault(p => p.Kind == PlanKind);
+            var study = c.Phases.FirstOrDefault(p => p.Kind == StudyKind);
+            var act = c.Phases.FirstOrDefault(p => p.Kind == ActKind);
+
+            var expected = plan?.Expected ?? "";
+            var actual = study?.Actual ?? "";
+            var studyText = study?.Llm ?? "";
+            var actText = act?.Llm ?? "";
+            // 학습이 전혀 없는(계획만 세운) 사이클은 recall 대상이 아니다.
+            if (expected.Length == 0 && actual.Length == 0 && studyText.Length == 0 && actText.Length == 0)
+                continue;
+
+            if (hasKeyword)
+            {
+                var hay = string.Join('\n', plan?.Input ?? "", expected, study?.Input ?? "", actual, studyText, actText);
+                if (hay.IndexOf(keyword!, StringComparison.OrdinalIgnoreCase) < 0) continue;
+            }
+
+            result.Add(new PdsaLearning(c.Id, c.Verdict, expected, actual, studyText, actText));
+            if (result.Count >= limit) break;
+        }
+        return result;
     }
 
     /// <summary>기대 충족률(재현율): Study 판정이 있는 사이클 중 met 비율. (met, 판정있는 사이클 수).</summary>

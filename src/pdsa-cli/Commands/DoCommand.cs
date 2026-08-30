@@ -9,7 +9,7 @@ public sealed class DoCommand : ICliCommand
 {
     public string Name => "do";
     public string Summary => "수행한 것 보고 → Plan→Do 그래프 정리";
-    public string Usage => "pdsa do \"<수행한 것>\" [--project <이름>]";
+    public string Usage => "pdsa do \"<수행한 것>\" [--json] [--project <이름>]";
 
     public async Task<int> RunAsync(string[] args, CancellationToken ct)
     {
@@ -25,6 +25,12 @@ public sealed class DoCommand : ICliCommand
         var plan = s.Workflow.GetPhase(cid, PdsaWorkflow.PlanKind)?.Input ?? "";
         var organized = await Spinner.RunAsync("코칭 중", c => s.Coach.OrganizeDoAsync(plan, done, c), ct);
         s.Workflow.RecordPhase(cid, PdsaWorkflow.DoKind, done, organized);
+
+        if (ArgUtil.Flag(args, "--json"))
+        {
+            JsonOut.Write(new DoJson(s.Project, cid, organized, s.Coach.Enabled), PdsaJson.Default.DoJson);
+            return 0;
+        }
 
         Console.WriteLine($"■ [{s.Project}] 사이클 #{cid} — Do 기록됨");
         if (s.Coach.Enabled)

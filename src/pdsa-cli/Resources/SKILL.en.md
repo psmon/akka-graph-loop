@@ -43,16 +43,17 @@ Run at least one cycle per task. **Read each step's CLI output and apply it to t
 
 1. **Plan** — enter what you're about to do.
    `pdsa plan "<what, why, and how>"`
-   → Read the **[Hypothesis]** and **[Metrics]** in the output. Proceed in a direction that tests that hypothesis.
+   → Read the **`Expected:`** line (a verifiable success criterion) and the **coaching & hypotheses** narrative. Proceed in a direction that tests it.
+   → Recent-cycle learnings are **auto-injected** into the coaching (accumulated-memory feedback). Disable with `--no-recall`.
 2. **Do** — report what you actually did.
    `pdsa do "<what you actually did: changes/commands/observations>"`
    → Check the **[Plan→Do summary]** (spot gaps vs. the plan).
 3. **Study** — report results/observations (including measurements).
    `pdsa study "<result numbers and observations; was the hypothesis right?>"`
-   → Read the **[Learnings & improvements]**. (Not "Check (did it pass?)" but "What did we learn?")
+   → Read the **learnings & improvements** narrative and the **`Verdict:`** (`met|partial|unmet`). (Not "Check (did it pass?)" but "What did we learn?")
 4. **Act** — get the next improvement action.
    `pdsa act`  (optional: `--note "<note>"`)
-   → Take the **[Next improvement action]** and carry it into the next cycle's `pdsa plan`.
+   → Take the **next improvement action** narrative and carry it into the next cycle's `pdsa plan`.
 
 ## 3. Operating rules
 
@@ -72,7 +73,24 @@ Run at least one cycle per task. **Read each step's CLI output and apply it to t
 | `pdsa do "…"` | Report execution → Plan→Do graph summary |
 | `pdsa study "…"` | Report results → learnings & improvements |
 | `pdsa act [--note "…"]` | Next improvement action (ends the cycle) |
+| `pdsa recall ["<topic>"]` | Recall prior-cycle learnings (planning context); auto-injected into plan |
 | `pdsa status` / `pdsa view` | Accumulated state / graph viewer |
 | `pdsa config …` / `pdsa check` / `pdsa models` | LLM key·model config / connection check / model list |
 
 Full help: `pdsa` (no args) or `pdsa <command> --help`.
+
+## 5. Structured output for agents (`--json`) & memory recall (`recall`)
+
+Don't regex the (Korean) coaching prose. Add **`--json`** to `plan`/`do`/`study`/`act`/`status`/`eval`/`recall`
+and stdout emits a single-line JSON object only (prose banners skipped; default output unchanged).
+It exposes the fields the CLI already parsed, so parsing is stable (camelCase).
+
+- `plan --json` → `{project, cycle, reinforceOf, expected, narrative, llmEnabled}`
+- `study --json` → `{project, cycle, expected, verdict, actual, narrative, llmEnabled}` (`verdict` = `met|partial|unmet`)
+- `act --json` → `{project, cycle, reinforce, what, narrative, hitRate:{met,total}, cycleCount, llmEnabled}`
+- `status --json` → full (untruncated) cycles/phases. `eval --json` → per-cycle expected/verdict/actual.
+- `recall ["<topic>"] --json` → `{project, topic, learnings:[{cycle, verdict, expected, actual, study, act}]}`
+
+Recall: `pdsa recall "<topic>"` pulls relevant prior learnings as pre-planning context (omit the topic for
+the most recent). For full prose without truncation use `pdsa status --full` / `pdsa eval --full`.
+If `llmEnabled` is `false`, the LLM is unconfigured so coaching/verdict were skipped (record-only) — don't rely on exit code alone.

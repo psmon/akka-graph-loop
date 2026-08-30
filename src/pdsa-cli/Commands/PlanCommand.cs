@@ -13,7 +13,7 @@ public sealed class PlanCommand : ICliCommand
 {
     public string Name => "plan";
     public string Summary => "계획 입력 → 기대 평가 수립(새 사이클 시작)";
-    public string Usage => "pdsa plan \"<계획>\" [--expect \"<기대 평가>\"] [--fresh] [--project <이름>]";
+    public string Usage => "pdsa plan \"<계획>\" [--expect \"<기대 평가>\"] [--fresh] [--no-recall] [--json] [--project <이름>]";
 
     public async Task<int> RunAsync(string[] args, CancellationToken ct)
     {
@@ -27,10 +27,21 @@ public sealed class PlanCommand : ICliCommand
         var reinforceOf = ArgUtil.Flag(args, "--fresh") ? 0 : s.Workflow.PendingReinforceTarget();
         var cid = s.Workflow.StartCycle(reinforceOf);
 
-        var coaching = await Spinner.RunAsync("코칭 중", c => s.Coach.HypothesisAsync(plan, c), ct);
+        // 누적 그래프 메모리 되먹임: 최근 사이클 학습을 코칭 프롬프트에 주입(--no-recall 로 생략).
+        var priorLearnings = s.Coach.Enabled && !ArgUtil.Flag(args, "--no-recall")
+            ? LearningFormat.ToPromptBlock(s.Workflow.RecentLearnings(3))
+            : "";
+        var coaching = await Spinner.RunAsync("코칭 중", c => s.Coach.HypothesisAsync(plan, priorLearnings, c), ct);
         var expected = ArgUtil.Option(args, "--expect") ?? coaching.Expected;
         s.Workflow.RecordPhase(cid, PdsaWorkflow.PlanKind, plan, coaching.Narrative,
             new Dictionary<string, string> { ["expected"] = expected });
+
+        if (ArgUtil.Flag(args, "--json"))
+        {
+            JsonOut.Write(new PlanJson(s.Project, cid, reinforceOf, expected, coaching.Narrative, s.Coach.Enabled),
+                PdsaJson.Default.PlanJson);
+            return 0;
+        }
 
         if (reinforceOf > 0)
             Console.WriteLine($"■ [{s.Project}] 보강 사이클 #{cid} 시작 (원 사이클 #{reinforceOf} 이월) — Plan 기록됨");

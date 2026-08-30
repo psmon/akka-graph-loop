@@ -8,7 +8,7 @@ public sealed class StatusCommand : ICliCommand
 {
     public string Name => "status";
     public string Summary => "현재 프로젝트의 PDSA 진행/누적 상태";
-    public string Usage => "pdsa status [--project <이름>] [--limit 5]";
+    public string Usage => "pdsa status [--project <이름>] [--limit 5] [--full] [--json]";
 
     public Task<int> RunAsync(string[] args, CancellationToken ct)
     {
@@ -16,6 +16,21 @@ public sealed class StatusCommand : ICliCommand
 
         using var s = PdsaSession.Open(args);
         var limit = ArgUtil.Int(args, "--limit", 5);
+
+        if (ArgUtil.Flag(args, "--json"))
+        {
+            var (m, t) = s.Workflow.HitRate();
+            var cyclesJson = s.Workflow.Recent(limit)
+                .Select(c => new CycleJson(c.Id, c.Status, c.Started, c.Verdict,
+                    c.Phases.Select(p => new PhaseJson(
+                        p.Kind, p.Input, p.Llm, p.Created, p.Expected, p.Verdict, p.Actual, p.Reinforce)).ToList()))
+                .ToList();
+            JsonOut.Write(
+                new StatusJson(s.Project, s.DbPath, s.LlmConfigured, s.Workflow.CycleCount(),
+                    new HitRateJson(m, t), cyclesJson),
+                PdsaJson.Default.StatusJson);
+            return Task.FromResult(0);
+        }
 
         Console.WriteLine($"프로젝트 : {s.Project}");
         Console.WriteLine($"그래프DB : {s.DbPath}");
@@ -33,20 +48,21 @@ public sealed class StatusCommand : ICliCommand
             return Task.FromResult(0);
         }
 
+        var full = ArgUtil.Flag(args, "--full");
         Console.WriteLine("\n최근 사이클:");
         foreach (var c in recent)
         {
             var badge = c.Verdict.Length > 0 ? $"  판정:{c.Verdict}" : "";
             Console.WriteLine($"  #{c.Id}  [{c.Status}]{badge}  {c.Started}");
             foreach (var p in c.Phases)
-                Console.WriteLine($"     - {p.Kind,-5}: {OneLine(p.Input)}");
+                Console.WriteLine($"     - {p.Kind,-5}: {OneLine(p.Input, full)}");
         }
         return Task.FromResult(0);
     }
 
-    private static string OneLine(string s)
+    private static string OneLine(string s, bool full)
     {
         var t = (s ?? "").ReplaceLineEndings(" ").Trim();
-        return t.Length <= 70 ? t : t[..70] + "…";
+        return full || t.Length <= 70 ? t : t[..70] + "…";
     }
 }

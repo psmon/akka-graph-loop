@@ -12,7 +12,7 @@ public sealed class StudyCommand : ICliCommand
 {
     public string Name => "study";
     public string Summary => "결과 보고 → 기대 대비 판정·학습(Check 아님)";
-    public string Usage => "pdsa study \"<결과/관찰>\" [--project <이름>]";
+    public string Usage => "pdsa study \"<결과/관찰>\" [--json] [--project <이름>]";
 
     public async Task<int> RunAsync(string[] args, CancellationToken ct)
     {
@@ -33,6 +33,14 @@ public sealed class StudyCommand : ICliCommand
         var judgment = await Spinner.RunAsync("판정 중", c => s.Coach.JudgeAsync(expected, plan, done, study, c), ct);
         s.Workflow.RecordPhase(cid, PdsaWorkflow.StudyKind, study, judgment.Narrative,
             new Dictionary<string, string> { ["verdict"] = judgment.Verdict, ["actual"] = judgment.Actual });
+
+        if (ArgUtil.Flag(args, "--json"))
+        {
+            JsonOut.Write(
+                new StudyJson(s.Project, cid, expected, judgment.Verdict, judgment.Actual, judgment.Narrative, s.Coach.Enabled),
+                PdsaJson.Default.StudyJson);
+            return 0;
+        }
 
         Console.WriteLine($"■ [{s.Project}] 사이클 #{cid} — Study 기록됨");
         if (expected.Length > 0)

@@ -11,7 +11,7 @@ public sealed class EvalCommand : ICliCommand
 {
     public string Name => "eval";
     public string Summary => "기대 충족률(재현율) + 사이클별 기대/판정/실제";
-    public string Usage => "pdsa eval [--project <이름>] [--limit 10]";
+    public string Usage => "pdsa eval [--project <이름>] [--limit 10] [--full] [--json]";
 
     public Task<int> RunAsync(string[] args, CancellationToken ct)
     {
@@ -19,6 +19,22 @@ public sealed class EvalCommand : ICliCommand
 
         using var s = PdsaSession.Open(args);
         var limit = ArgUtil.Int(args, "--limit", 10);
+
+        if (ArgUtil.Flag(args, "--json"))
+        {
+            var (jm, jt) = s.Workflow.HitRate();
+            var cyclesJson = s.Workflow.Recent(limit).Select(c =>
+            {
+                var plan = c.Phases.FirstOrDefault(p => p.Kind == PdsaWorkflow.PlanKind);
+                var studyP = c.Phases.FirstOrDefault(p => p.Kind == PdsaWorkflow.StudyKind);
+                var act = c.Phases.FirstOrDefault(p => p.Kind == PdsaWorkflow.ActKind);
+                var reinforce = act is not null && act.Reinforce.StartsWith("yes", StringComparison.OrdinalIgnoreCase)
+                    ? (act.Reinforce.Length > 4 ? act.Reinforce[4..] : "") : "";
+                return new EvalCycleJson(c.Id, c.Status, c.Verdict, plan?.Expected ?? "", studyP?.Actual ?? "", reinforce);
+            }).ToList();
+            JsonOut.Write(new EvalJson(s.Project, new HitRateJson(jm, jt), cyclesJson), PdsaJson.Default.EvalJson);
+            return Task.FromResult(0);
+        }
 
         var (met, total) = s.Workflow.HitRate();
         Console.WriteLine($"프로젝트 : {s.Project}");
@@ -33,6 +49,7 @@ public sealed class EvalCommand : ICliCommand
             return Task.FromResult(0);
         }
 
+        var full = ArgUtil.Flag(args, "--full");
         Console.WriteLine("\n사이클별 폐루프:");
         foreach (var c in recent)
         {
@@ -42,18 +59,18 @@ public sealed class EvalCommand : ICliCommand
             var verdict = c.Verdict.Length > 0 ? c.Verdict : "-";
 
             Console.WriteLine($"  #{c.Id}  [{c.Status}]  판정:{verdict}");
-            Console.WriteLine($"     기대: {OneLine(plan?.Expected)}");
-            Console.WriteLine($"     실제: {OneLine(studyP?.Actual)}");
+            Console.WriteLine($"     기대: {OneLine(plan?.Expected, full)}");
+            Console.WriteLine($"     실제: {OneLine(studyP?.Actual, full)}");
             if (act is not null && act.Reinforce.StartsWith("yes", StringComparison.OrdinalIgnoreCase))
-                Console.WriteLine($"     보강: {OneLine(act.Reinforce.Length > 4 ? act.Reinforce[4..] : "")}");
+                Console.WriteLine($"     보강: {OneLine(act.Reinforce.Length > 4 ? act.Reinforce[4..] : "", full)}");
         }
         return Task.FromResult(0);
     }
 
-    private static string OneLine(string? s)
+    private static string OneLine(string? s, bool full)
     {
         var t = (s ?? "").ReplaceLineEndings(" ").Trim();
         if (t.Length == 0) return "-";
-        return t.Length <= 90 ? t : t[..90] + "…";
+        return full || t.Length <= 90 ? t : t[..90] + "…";
     }
 }

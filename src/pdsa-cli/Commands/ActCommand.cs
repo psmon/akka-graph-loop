@@ -13,7 +13,7 @@ public sealed class ActCommand : ICliCommand
 {
     public string Name => "act";
     public string Summary => "학습 정리 + 즉시 보강 판단(사이클 종료)";
-    public string Usage => "pdsa act [--note \"<메모>\"] [--reinforce \"<보강할 것>\"] [--project <이름>]";
+    public string Usage => "pdsa act [--note \"<메모>\"] [--reinforce \"<보강할 것>\"] [--json] [--project <이름>]";
 
     public async Task<int> RunAsync(string[] args, CancellationToken ct)
     {
@@ -43,6 +43,16 @@ public sealed class ActCommand : ICliCommand
 
         s.Workflow.RecordPhase(cid, PdsaWorkflow.ActKind, note, coaching.Narrative,
             new Dictionary<string, string> { ["reinforce"] = reinforceValue });
+
+        if (ArgUtil.Flag(args, "--json"))
+        {
+            var (m, t) = s.Workflow.HitRate();
+            JsonOut.Write(
+                new ActJson(s.Project, cid, reinforce, what, coaching.Narrative,
+                    new HitRateJson(m, t), s.Workflow.CycleCount(), s.Coach.Enabled),
+                PdsaJson.Default.ActJson);
+            return 0;
+        }
 
         Console.WriteLine($"■ [{s.Project}] 사이클 #{cid} — Act 기록됨(사이클 종료). 누적 사이클 {s.Workflow.CycleCount()}개.");
         var (met, total) = s.Workflow.HitRate();
