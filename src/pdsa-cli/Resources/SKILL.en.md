@@ -75,6 +75,7 @@ Run at least one cycle per task. **Read each step's CLI output and apply it to t
 | `pdsa act [--note "…"]` | Next improvement action (ends the cycle) |
 | `pdsa recall ["<topic>"]` | Recall prior-cycle learnings (planning context); auto-injected into plan |
 | `pdsa status` / `pdsa view` | Accumulated state / graph viewer |
+| `pdsa update [--check]` | Check the latest version & update (npm global); `--check` only checks |
 | `pdsa config …` / `pdsa check` / `pdsa models` | LLM key·model config / connection check / model list |
 
 Full help: `pdsa` (no args) or `pdsa <command> --help`.

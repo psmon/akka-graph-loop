@@ -75,6 +75,7 @@ public sealed class CommandRouter
         Console.WriteLine("먼저 LLM 설정:  pdsa config key <키>  (또는 key-file <파일>) ,  pdsa config model <모델>");
         Console.WriteLine("호출 확인:      pdsa check");
         Console.WriteLine("각 명령 상세:   pdsa <명령> --help");
+        PrintUpdateNotice(ko: true);
     }
 
     private void PrintHelpEn()
@@ -107,6 +108,18 @@ public sealed class CommandRouter
         Console.WriteLine("Configure the LLM first:  pdsa config key <key>  (or key-file <file>) ,  pdsa config model <model>");
         Console.WriteLine("Verify the call:          pdsa check");
         Console.WriteLine("Per-command detail:       pdsa <command> --help");
+        PrintUpdateNotice(ko: false);
+    }
+
+    /// <summary>도움말 하단에 '새 버전 있음' 안내(최신이거나 오프라인이면 아무것도 출력하지 않음).</summary>
+    private static void PrintUpdateNotice(bool ko)
+    {
+        var notice = VersionInfo.UpdateNoticeForHelp(ko);
+        if (notice is not null)
+        {
+            Console.WriteLine();
+            Console.WriteLine(notice);
+        }
     }
 
     /// <summary>영문 도움말용 명령 요약(없으면 명령 자체 요약으로 폴백).</summary>
@@ -127,6 +140,7 @@ public sealed class CommandRouter
         "models" => "List supported models",
         "guide" => "Get one-off PDSA guidance from the LLM (OpenAI)",
         "run" => "Run the PDSA loop (Akka streams) + record to the graph DB",
+        "update" => "Check the latest version and update (npm global)",
         "version" => "Print version and runtime info",
         _ => c.Summary,
     };
