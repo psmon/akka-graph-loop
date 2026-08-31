@@ -21,6 +21,7 @@ pdsa <command> --help
 | [`act`](/akka-graph-loop/cli/cycle/) | Learnings + reinforcement decision (closes the cycle) |
 | [`status`](/akka-graph-loop/cli/project/) | Recent cycles + expectation hit-rate |
 | [`eval`](/akka-graph-loop/cli/project/) | Per-cycle expected / verdict / actual + hit-rate |
+| [`recall`](/akka-graph-loop/cli/project/) | Read back prior-cycle learnings (planning context) |
 | [`project`](/akka-graph-loop/cli/project/) | Set / list / show / clear the active project |
 | [`view`](/akka-graph-loop/cli/project/) | Local graph viewer |
 | [`config`](/akka-graph-loop/cli/config/) | LLM key / model / provider / auth / language |
@@ -29,6 +30,7 @@ pdsa <command> --help
 | [`init`](/akka-graph-loop/cli/misc/) | Install the PDSA skill into a workspace |
 | [`guide`](/akka-graph-loop/cli/misc/) | One-off PDSA advice from the LLM |
 | [`run`](/akka-graph-loop/cli/misc/) | Run the demo PDSA feedback cycle (Akka.Streams) |
+| [`update`](/akka-graph-loop/cli/misc/) | Check the latest version and update (npm global) |
 | [`version`](/akka-graph-loop/cli/misc/) | Version + runtime + stack |
 
 ## Global options
@@ -37,6 +39,8 @@ pdsa <command> --help
 | --- | --- |
 | `--lang <en\|ko\|auto>` | Language for this invocation. See [Language](/akka-graph-loop/llm/language/). |
 | `--project <name>` | Run this command against a specific project's DB (per-command). |
+| `--json` | Machine-readable JSON instead of prose. Opt-in on `plan`/`do`/`study`/`act`/`status`/`eval`/`recall`. See [For AI Agents](/akka-graph-loop/guides/ai-agents/). |
+| `--full` | On `status`/`eval`, print prose without the 70/90-char truncation. |
 | `--help` | Usage for the command. |
 
 ## Where state lives

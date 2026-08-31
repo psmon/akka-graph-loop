@@ -76,14 +76,43 @@ pdsa study "results/metrics"  # LLM judges vs. expected: met | partial | unmet
 pdsa act   --note "memo"      # learnings + auto-links a REINFORCE cycle if needed
 pdsa status                   # progress + expectation hit-rate (recall)
 pdsa eval                     # per-cycle expected / verdict / actual + hit-rate
+pdsa recall "topic"           # read back prior-cycle learnings (planning context)
 pdsa view                     # local graph viewer
 ```
 
-- **Plan** makes the LLM set a verifiable *expected evaluation* (success criteria / metric).
+- **Plan** makes the LLM set a verifiable *expected evaluation* (success criteria / metric). Recent-cycle
+  learnings are **auto-injected** into the coaching so it doesn't repeat past mistakes (`--no-recall` opts out).
 - **Study** compares result vs. expected and records a **verdict** (`met`/`partial`/`unmet`) + the measured actual.
 - **Act** decides whether immediate reinforcement is needed; if so, the next `pdsa plan` is automatically
   linked as a **reinforcement cycle** (`REINFORCES` edge). `--fresh` opts out.
-- **Recall** = expectation hit-rate (`met / cycles-with-a-verdict`), shown in `status`/`eval` and in the viewer.
+- **Hit-rate (recall)** = expectation hit-rate (`met / cycles-with-a-verdict`), shown in `status`/`eval` and in the viewer.
+- **`pdsa recall`** reads accumulated learnings back out (optionally filtered by a topic keyword) so an agent
+  can pull context before planning — the same memory `plan` injects automatically.
+
+### Structured output for agents (`--json`)
+
+Every cycle command exposes the fields it already parsed as a single JSON object — add `--json` to
+`plan` / `do` / `study` / `act` / `status` / `eval` / `recall`. The default (human-prose) output is unchanged,
+so agents get stable machine-readable fields without scraping coaching text.
+
+```bash
+pdsa study "p95 320→240ms" --json
+# {"project":"my-repo","cycle":7,"expected":"…","verdict":"partial","actual":"…","narrative":"…","llmEnabled":true}
+
+pdsa status --full            # prose, without the 70/90-char truncation (status/eval)
+```
+
+### Staying up to date (`pdsa update`)
+
+```bash
+pdsa update            # check the latest version on npm and update (npm global)
+pdsa update --check    # only report current vs. latest
+```
+
+Help and the no-argument screen also show a "new version available" note (24 h cached, offline-safe).
+On Windows, `update` **won't force-kill** a running `pdsa` — if another instance is holding the native
+`kuzu_shared.dll` (typically `pdsa view`), it asks you to close it first, then retries cleanly (avoids the npm
+`EPERM … unlink kuzu_shared.dll` cleanup warning). Manual update is always `npm i -g @webnori/pdsa@latest`.
 
 ### LLM providers · auth modes
 

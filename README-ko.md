@@ -228,12 +228,41 @@ pdsa do    "<수행한 것>" # 수행 보고 → Plan→Do 를 그래프로 정�
 pdsa study "<결과/관찰>" # 결과 보고 → 무엇을 배웠나(학습)·개선점 도출 (Check 아님)
 pdsa act                # 다음 개선 액션 코칭(사이클 종료) → 반영해 다음 plan 으로
 pdsa status             # 현재 프로젝트의 진행/누적 상태
+pdsa eval               # 사이클별 기대/판정/실제 + 기대 충족률
+pdsa recall "<주제>"    # 과거 사이클 학습 되읽기(계획 컨텍스트). plan 이 자동 주입
 pdsa view               # 누적 그래프 메모리를 로컬 포트 뷰어로 시각화
 ```
 
 - 대개 계획만 세우고 **가설을 빠뜨리므로**, `plan` 이 LLM 으로 검증 가능한 가설과 측정 지표를 세워준다.
+  또한 **최근 사이클 학습이 코칭에 자동 주입**되어 반복 실수를 피한다(끄려면 `--no-recall`).
 - 반복할수록 그래프에 학습이 누적되어, 매 실행이 **공정 자체를 개선하는 PDSA 철학**을 지원한다.
+- `pdsa recall "<주제>"` 로 관련 과거 학습을 직접 되읽어 계획 전 컨텍스트로 쓸 수 있다(주제 생략 시 최근 학습).
 - LLM 미설정 시에도 입력은 그래프에 **기록**되며 코칭만 생략된다(임의 텍스트는 파라미터 바인딩으로 안전 저장).
+
+### 에이전트용 구조화 출력(`--json`)
+
+`plan`/`do`/`study`/`act`/`status`/`eval`/`recall` 에 `--json` 을 붙이면 CLI 가 이미 파싱해 둔 필드를
+stdout 에 한 줄 JSON(camelCase)으로 방출한다. 기본 프로즈 출력은 **불변**이라, 에이전트는 코칭 텍스트를
+정규식으로 긁지 않고 안정적인 기계 판독 필드를 얻는다.
+
+```bash
+pdsa study "p95 320→240ms" --json
+# {"project":"my-repo","cycle":7,"expected":"…","verdict":"partial","actual":"…","narrative":"…","llmEnabled":true}
+
+pdsa status --full        # 프로즈를 70/90자 절삭 없이 전체 출력(status/eval)
+```
+
+### 최신 버전 유지(`pdsa update`)
+
+```bash
+pdsa update            # npm 최신 버전 확인 후 업데이트(npm 전역)
+pdsa update --check    # 현재/최신만 확인
+```
+
+help·무인자 화면 하단에도 "새 버전 있음" 안내가 뜬다(24h 캐시, 오프라인 안전).
+Windows 에서 `update` 는 실행 중인 pdsa 를 **강제 종료하지 않는다** — 다른 인스턴스(주로 `pdsa view`)가
+네이티브 `kuzu_shared.dll` 을 잠그고 있으면 종료를 안내한 뒤 재시도한다(npm 의 `EPERM … unlink kuzu_shared.dll`
+정리 경고 회피). 수동 업데이트는 언제나 `npm i -g @webnori/pdsa@latest`.
 
 ### 멀티프로젝트 (프로젝트별 DB 분리)
 

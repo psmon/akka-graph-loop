@@ -31,6 +31,29 @@ and record the run to the graph DB. This is the learning demo, distinct from the
 pdsa run
 ```
 
+## `pdsa update`
+
+Check the latest version on the npm registry and update the global install.
+
+```bash
+pdsa update            # check latest, then update (npm global)
+pdsa update --check    # only report current vs. latest (no install)
+```
+
+- The `pdsa` help / no-argument screen also shows a **"new version available"** note when you're behind
+  (24 h cached, so it stays instant and works offline).
+- **Pre-check, no force-kill:** if another `pdsa` process is running, `update` does **not** kill it. On
+  Windows a running instance locks the native binary, so `update` asks you to close it first, then retries.
+- **Self-lock avoidance:** on Windows the actual `npm i -g` runs in a fresh console while `pdsa` exits, so the
+  running executable/DLL is unlocked before replacement; on Linux/macOS it runs inline.
+
+:::note[EPERM: unlink kuzu_shared.dll (Windows)]
+If `npm i -g @webnori/pdsa` prints `npm warn cleanup … EPERM … unlink kuzu_shared.dll`, a running `pdsa`
+instance — usually **`pdsa view`** — is holding the native library, so npm can't clean its staging folder.
+The install itself still succeeds; close the running instance (or use `pdsa update`, which pre-checks and
+cleans up leftover `.pdsa-*` staging folders) and the warning goes away.
+:::
+
 ## `pdsa version`
 
 Print the version, .NET runtime, and stack.
