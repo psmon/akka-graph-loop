@@ -31,6 +31,7 @@ var router = new CommandRouter(new ICliCommand[]
     new ModelsCommand(),
     new GuideCommand(),
     new RunCommand(),
+    new UpdateCommand(),
     new VersionCommand(),
 });
 

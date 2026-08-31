@@ -73,6 +73,7 @@ description: >-
 | `pdsa act [--note "…"]` | 다음 개선 액션(사이클 종료) |
 | `pdsa recall ["<주제>"]` | 과거 사이클 학습 되읽기(계획 컨텍스트). plan 이 자동 주입 |
 | `pdsa status` / `pdsa view` | 누적 상태 / 그래프 뷰어 |
+| `pdsa update [--check]` | 최신 버전 확인·업데이트(npm 전역). `--check` 는 확인만 |
 | `pdsa config …` / `pdsa check` / `pdsa models` | LLM 키·모델 설정 / 연결 확인 / 모델 목록 |
 
 전체 도움말: `pdsa`(인자 없이) 또는 `pdsa <명령> --help`.
