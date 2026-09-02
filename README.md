@@ -39,6 +39,7 @@ DSL through concepts, examples, tests, and visualization.
   Akka.Streams feedback cycle. Each round is recorded live into a **Kùzu embedded graph DB** and read back with Cypher.
 - 🖥️ **Graph viewer** — a **separate web project** that visualizes the recorded Kùzu graph (local port, self-contained SVG force layout, no external CDN).
 - 🛠️ **pdsa-cli** — the official CLI that lets an AI agent run/record/query the PDSA loop and get LLM coaching. A **Native AOT single executable** (Akka + Kùzu bundled), shipped to npm as `@webnori/pdsa`.
+- 📖 **[The self-improving loop](docs/pdsa-self-loop/README.md)** — how this project was built *by* the tool it ships: 22 PDSA cycles, cycle-by-cycle, with a hero card per cycle. Read straight out of the loop's own graph memory.
 - 🧪 **Tests** — `tests/AkkaGraphLoop.Tests` (xUnit + Akka TestKit) verifying each junction and cycle **liveness (no deadlock)**.
 
 ## What you learn
