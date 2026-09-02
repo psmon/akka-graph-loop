@@ -1,0 +1,1404 @@
+{
+ "project": "akka-graph-loop",
+ "hitRate": {
+  "met": 11,
+  "total": 18
+ },
+ "nodes": [
+  {
+   "id": "Project:akka-graph-loop",
+   "label": "akka-graph-loop",
+   "kind": "Project",
+   "props": {}
+  },
+  {
+   "id": "Cycle:1",
+   "label": "Cycle #1",
+   "kind": "Cycle",
+   "props": {
+    "status": "acted"
+   }
+  },
+  {
+   "id": "Cycle:2",
+   "label": "Cycle #2",
+   "kind": "Cycle",
+   "props": {
+    "status": "acted"
+   }
+  },
+  {
+   "id": "Cycle:3",
+   "label": "Cycle #3",
+   "kind": "Cycle",
+   "props": {
+    "status": "acted"
+   }
+  },
+  {
+   "id": "Cycle:4",
+   "label": "Cycle #4",
+   "kind": "Cycle",
+   "props": {
+    "status": "acted"
+   }
+  },
+  {
+   "id": "Cycle:5",
+   "label": "Cycle #5",
+   "kind": "Cycle",
+   "props": {
+    "status": "acted"
+   }
+  },
+  {
+   "id": "Cycle:6",
+   "label": "Cycle #6",
+   "kind": "Cycle",
+   "props": {
+    "status": "acted"
+   }
+  },
+  {
+   "id": "Cycle:7",
+   "label": "Cycle #7",
+   "kind": "Cycle",
+   "props": {
+    "status": "acted"
+   }
+  },
+  {
+   "id": "Cycle:8",
+   "label": "Cycle #8",
+   "kind": "Cycle",
+   "props": {
+    "status": "acted"
+   }
+  },
+  {
+   "id": "Cycle:9",
+   "label": "Cycle #9",
+   "kind": "Cycle",
+   "props": {
+    "status": "acted"
+   }
+  },
+  {
+   "id": "Cycle:10",
+   "label": "Cycle #10",
+   "kind": "Cycle",
+   "props": {
+    "status": "acted"
+   }
+  },
+  {
+   "id": "Cycle:11",
+   "label": "Cycle #11",
+   "kind": "Cycle",
+   "props": {
+    "status": "planned"
+   }
+  },
+  {
+   "id": "Cycle:12",
+   "label": "Cycle #12",
+   "kind": "Cycle",
+   "props": {
+    "status": "acted"
+   }
+  },
+  {
+   "id": "Cycle:13",
+   "label": "Cycle #13",
+   "kind": "Cycle",
+   "props": {
+    "status": "acted"
+   }
+  },
+  {
+   "id": "Cycle:14",
+   "label": "Cycle #14",
+   "kind": "Cycle",
+   "props": {
+    "status": "acted"
+   }
+  },
+  {
+   "id": "Cycle:15",
+   "label": "Cycle #15",
+   "kind": "Cycle",
+   "props": {
+    "status": "acted"
+   }
+  },
+  {
+   "id": "Cycle:16",
+   "label": "Cycle #16",
+   "kind": "Cycle",
+   "props": {
+    "status": "acted"
+   }
+  },
+  {
+   "id": "Cycle:17",
+   "label": "Cycle #17",
+   "kind": "Cycle",
+   "props": {
+    "status": "acted"
+   }
+  },
+  {
+   "id": "Cycle:18",
+   "label": "Cycle #18",
+   "kind": "Cycle",
+   "props": {
+    "status": "acted"
+   }
+  },
+  {
+   "id": "Cycle:19",
+   "label": "Cycle #19",
+   "kind": "Cycle",
+   "props": {
+    "status": "acted"
+   }
+  },
+  {
+   "id": "Cycle:20",
+   "label": "Cycle #20",
+   "kind": "Cycle",
+   "props": {
+    "status": "acted"
+   }
+  },
+  {
+   "id": "Cycle:21",
+   "label": "Cycle #21",
+   "kind": "Cycle",
+   "props": {
+    "status": "acted"
+   }
+  },
+  {
+   "id": "Cycle:22",
+   "label": "Cycle #22",
+   "kind": "Cycle",
+   "props": {
+    "status": "acted"
+   }
+  },
+  {
+   "id": "Phase:1-plan",
+   "label": "plan",
+   "kind": "Phase",
+   "props": {}
+  },
+  {
+   "id": "Phase:1-do",
+   "label": "do",
+   "kind": "Phase",
+   "props": {}
+  },
+  {
+   "id": "Phase:1-study",
+   "label": "study",
+   "kind": "Phase",
+   "props": {}
+  },
+  {
+   "id": "Phase:1-act",
+   "label": "act",
+   "kind": "Phase",
+   "props": {}
+  },
+  {
+   "id": "Phase:2-plan",
+   "label": "plan",
+   "kind": "Phase",
+   "props": {}
+  },
+  {
+   "id": "Phase:2-do",
+   "label": "do",
+   "kind": "Phase",
+   "props": {}
+  },
+  {
+   "id": "Phase:2-study",
+   "label": "study",
+   "kind": "Phase",
+   "props": {}
+  },
+  {
+   "id": "Phase:2-act",
+   "label": "act",
+   "kind": "Phase",
+   "props": {}
+  },
+  {
+   "id": "Phase:3-plan",
+   "label": "plan",
+   "kind": "Phase",
+   "props": {}
+  },
+  {
+   "id": "Phase:3-do",
+   "label": "do",
+   "kind": "Phase",
+   "props": {}
+  },
+  {
+   "id": "Phase:3-study",
+   "label": "study",
+   "kind": "Phase",
+   "props": {}
+  },
+  {
+   "id": "Phase:3-act",
+   "label": "act",
+   "kind": "Phase",
+   "props": {}
+  },
+  {
+   "id": "Phase:4-plan",
+   "label": "plan",
+   "kind": "Phase",
+   "props": {}
+  },
+  {
+   "id": "Phase:4-do",
+   "label": "do",
+   "kind": "Phase",
+   "props": {}
+  },
+  {
+   "id": "Phase:4-study",
+   "label": "study",
+   "kind": "Phase",
+   "props": {
+    "verdict": "partial"
+   }
+  },
+  {
+   "id": "Phase:4-act",
+   "label": "act",
+   "kind": "Phase",
+   "props": {}
+  },
+  {
+   "id": "Phase:5-plan",
+   "label": "plan",
+   "kind": "Phase",
+   "props": {}
+  },
+  {
+   "id": "Phase:5-do",
+   "label": "do",
+   "kind": "Phase",
+   "props": {}
+  },
+  {
+   "id": "Phase:5-study",
+   "label": "study",
+   "kind": "Phase",
+   "props": {
+    "verdict": "partial"
+   }
+  },
+  {
+   "id": "Phase:5-act",
+   "label": "act",
+   "kind": "Phase",
+   "props": {}
+  },
+  {
+   "id": "Phase:6-plan",
+   "label": "plan",
+   "kind": "Phase",
+   "props": {}
+  },
+  {
+   "id": "Phase:6-do",
+   "label": "do",
+   "kind": "Phase",
+   "props": {}
+  },
+  {
+   "id": "Phase:6-study",
+   "label": "study",
+   "kind": "Phase",
+   "props": {
+    "verdict": "partial"
+   }
+  },
+  {
+   "id": "Phase:6-act",
+   "label": "act",
+   "kind": "Phase",
+   "props": {}
+  },
+  {
+   "id": "Phase:7-plan",
+   "label": "plan",
+   "kind": "Phase",
+   "props": {}
+  },
+  {
+   "id": "Phase:7-do",
+   "label": "do",
+   "kind": "Phase",
+   "props": {}
+  },
+  {
+   "id": "Phase:7-study",
+   "label": "study",
+   "kind": "Phase",
+   "props": {
+    "verdict": "partial"
+   }
+  },
+  {
+   "id": "Phase:7-act",
+   "label": "act",
+   "kind": "Phase",
+   "props": {}
+  },
+  {
+   "id": "Phase:8-plan",
+   "label": "plan",
+   "kind": "Phase",
+   "props": {}
+  },
+  {
+   "id": "Phase:8-do",
+   "label": "do",
+   "kind": "Phase",
+   "props": {}
+  },
+  {
+   "id": "Phase:8-study",
+   "label": "study",
+   "kind": "Phase",
+   "props": {
+    "verdict": "met"
+   }
+  },
+  {
+   "id": "Phase:8-act",
+   "label": "act",
+   "kind": "Phase",
+   "props": {}
+  },
+  {
+   "id": "Phase:9-plan",
+   "label": "plan",
+   "kind": "Phase",
+   "props": {}
+  },
+  {
+   "id": "Phase:9-do",
+   "label": "do",
+   "kind": "Phase",
+   "props": {}
+  },
+  {
+   "id": "Phase:9-study",
+   "label": "study",
+   "kind": "Phase",
+   "props": {
+    "verdict": "partial"
+   }
+  },
+  {
+   "id": "Phase:9-act",
+   "label": "act",
+   "kind": "Phase",
+   "props": {}
+  },
+  {
+   "id": "Phase:10-plan",
+   "label": "plan",
+   "kind": "Phase",
+   "props": {}
+  },
+  {
+   "id": "Phase:10-do",
+   "label": "do",
+   "kind": "Phase",
+   "props": {}
+  },
+  {
+   "id": "Phase:10-study",
+   "label": "study",
+   "kind": "Phase",
+   "props": {
+    "verdict": "met"
+   }
+  },
+  {
+   "id": "Phase:10-act",
+   "label": "act",
+   "kind": "Phase",
+   "props": {}
+  },
+  {
+   "id": "Phase:11-plan",
+   "label": "plan",
+   "kind": "Phase",
+   "props": {}
+  },
+  {
+   "id": "Phase:12-plan",
+   "label": "plan",
+   "kind": "Phase",
+   "props": {}
+  },
+  {
+   "id": "Phase:12-do",
+   "label": "do",
+   "kind": "Phase",
+   "props": {}
+  },
+  {
+   "id": "Phase:12-study",
+   "label": "study",
+   "kind": "Phase",
+   "props": {
+    "verdict": "unmet"
+   }
+  },
+  {
+   "id": "Phase:12-act",
+   "label": "act",
+   "kind": "Phase",
+   "props": {}
+  },
+  {
+   "id": "Phase:13-plan",
+   "label": "plan",
+   "kind": "Phase",
+   "props": {}
+  },
+  {
+   "id": "Phase:13-do",
+   "label": "do",
+   "kind": "Phase",
+   "props": {}
+  },
+  {
+   "id": "Phase:13-study",
+   "label": "study",
+   "kind": "Phase",
+   "props": {
+    "verdict": "met"
+   }
+  },
+  {
+   "id": "Phase:13-act",
+   "label": "act",
+   "kind": "Phase",
+   "props": {}
+  },
+  {
+   "id": "Phase:14-plan",
+   "label": "plan",
+   "kind": "Phase",
+   "props": {}
+  },
+  {
+   "id": "Phase:14-do",
+   "label": "do",
+   "kind": "Phase",
+   "props": {}
+  },
+  {
+   "id": "Phase:14-study",
+   "label": "study",
+   "kind": "Phase",
+   "props": {
+    "verdict": "met"
+   }
+  },
+  {
+   "id": "Phase:14-act",
+   "label": "act",
+   "kind": "Phase",
+   "props": {}
+  },
+  {
+   "id": "Phase:15-plan",
+   "label": "plan",
+   "kind": "Phase",
+   "props": {}
+  },
+  {
+   "id": "Phase:15-do",
+   "label": "do",
+   "kind": "Phase",
+   "props": {}
+  },
+  {
+   "id": "Phase:15-study",
+   "label": "study",
+   "kind": "Phase",
+   "props": {
+    "verdict": "partial"
+   }
+  },
+  {
+   "id": "Phase:15-act",
+   "label": "act",
+   "kind": "Phase",
+   "props": {}
+  },
+  {
+   "id": "Phase:16-plan",
+   "label": "plan",
+   "kind": "Phase",
+   "props": {}
+  },
+  {
+   "id": "Phase:16-do",
+   "label": "do",
+   "kind": "Phase",
+   "props": {}
+  },
+  {
+   "id": "Phase:16-study",
+   "label": "study",
+   "kind": "Phase",
+   "props": {
+    "verdict": "met"
+   }
+  },
+  {
+   "id": "Phase:16-act",
+   "label": "act",
+   "kind": "Phase",
+   "props": {}
+  },
+  {
+   "id": "Phase:17-plan",
+   "label": "plan",
+   "kind": "Phase",
+   "props": {}
+  },
+  {
+   "id": "Phase:17-do",
+   "label": "do",
+   "kind": "Phase",
+   "props": {}
+  },
+  {
+   "id": "Phase:17-study",
+   "label": "study",
+   "kind": "Phase",
+   "props": {
+    "verdict": "met"
+   }
+  },
+  {
+   "id": "Phase:17-act",
+   "label": "act",
+   "kind": "Phase",
+   "props": {}
+  },
+  {
+   "id": "Phase:18-plan",
+   "label": "plan",
+   "kind": "Phase",
+   "props": {}
+  },
+  {
+   "id": "Phase:18-do",
+   "label": "do",
+   "kind": "Phase",
+   "props": {}
+  },
+  {
+   "id": "Phase:18-study",
+   "label": "study",
+   "kind": "Phase",
+   "props": {
+    "verdict": "met"
+   }
+  },
+  {
+   "id": "Phase:18-act",
+   "label": "act",
+   "kind": "Phase",
+   "props": {}
+  },
+  {
+   "id": "Phase:19-plan",
+   "label": "plan",
+   "kind": "Phase",
+   "props": {}
+  },
+  {
+   "id": "Phase:19-do",
+   "label": "do",
+   "kind": "Phase",
+   "props": {}
+  },
+  {
+   "id": "Phase:19-study",
+   "label": "study",
+   "kind": "Phase",
+   "props": {
+    "verdict": "met"
+   }
+  },
+  {
+   "id": "Phase:19-act",
+   "label": "act",
+   "kind": "Phase",
+   "props": {}
+  },
+  {
+   "id": "Phase:20-plan",
+   "label": "plan",
+   "kind": "Phase",
+   "props": {}
+  },
+  {
+   "id": "Phase:20-do",
+   "label": "do",
+   "kind": "Phase",
+   "props": {}
+  },
+  {
+   "id": "Phase:20-study",
+   "label": "study",
+   "kind": "Phase",
+   "props": {
+    "verdict": "met"
+   }
+  },
+  {
+   "id": "Phase:20-act",
+   "label": "act",
+   "kind": "Phase",
+   "props": {}
+  },
+  {
+   "id": "Phase:21-plan",
+   "label": "plan",
+   "kind": "Phase",
+   "props": {}
+  },
+  {
+   "id": "Phase:21-do",
+   "label": "do",
+   "kind": "Phase",
+   "props": {}
+  },
+  {
+   "id": "Phase:21-study",
+   "label": "study",
+   "kind": "Phase",
+   "props": {
+    "verdict": "met"
+   }
+  },
+  {
+   "id": "Phase:21-act",
+   "label": "act",
+   "kind": "Phase",
+   "props": {}
+  },
+  {
+   "id": "Phase:22-plan",
+   "label": "plan",
+   "kind": "Phase",
+   "props": {}
+  },
+  {
+   "id": "Phase:22-do",
+   "label": "do",
+   "kind": "Phase",
+   "props": {}
+  },
+  {
+   "id": "Phase:22-study",
+   "label": "study",
+   "kind": "Phase",
+   "props": {
+    "verdict": "met"
+   }
+  },
+  {
+   "id": "Phase:22-act",
+   "label": "act",
+   "kind": "Phase",
+   "props": {}
+  }
+ ],
+ "edges": [
+  {
+   "from": "Project:akka-graph-loop",
+   "to": "Cycle:1",
+   "type": "HAS_CYCLE"
+  },
+  {
+   "from": "Project:akka-graph-loop",
+   "to": "Cycle:2",
+   "type": "HAS_CYCLE"
+  },
+  {
+   "from": "Project:akka-graph-loop",
+   "to": "Cycle:3",
+   "type": "HAS_CYCLE"
+  },
+  {
+   "from": "Project:akka-graph-loop",
+   "to": "Cycle:4",
+   "type": "HAS_CYCLE"
+  },
+  {
+   "from": "Project:akka-graph-loop",
+   "to": "Cycle:5",
+   "type": "HAS_CYCLE"
+  },
+  {
+   "from": "Project:akka-graph-loop",
+   "to": "Cycle:6",
+   "type": "HAS_CYCLE"
+  },
+  {
+   "from": "Project:akka-graph-loop",
+   "to": "Cycle:7",
+   "type": "HAS_CYCLE"
+  },
+  {
+   "from": "Project:akka-graph-loop",
+   "to": "Cycle:8",
+   "type": "HAS_CYCLE"
+  },
+  {
+   "from": "Project:akka-graph-loop",
+   "to": "Cycle:9",
+   "type": "HAS_CYCLE"
+  },
+  {
+   "from": "Project:akka-graph-loop",
+   "to": "Cycle:10",
+   "type": "HAS_CYCLE"
+  },
+  {
+   "from": "Project:akka-graph-loop",
+   "to": "Cycle:11",
+   "type": "HAS_CYCLE"
+  },
+  {
+   "from": "Project:akka-graph-loop",
+   "to": "Cycle:12",
+   "type": "HAS_CYCLE"
+  },
+  {
+   "from": "Project:akka-graph-loop",
+   "to": "Cycle:13",
+   "type": "HAS_CYCLE"
+  },
+  {
+   "from": "Project:akka-graph-loop",
+   "to": "Cycle:14",
+   "type": "HAS_CYCLE"
+  },
+  {
+   "from": "Project:akka-graph-loop",
+   "to": "Cycle:15",
+   "type": "HAS_CYCLE"
+  },
+  {
+   "from": "Project:akka-graph-loop",
+   "to": "Cycle:16",
+   "type": "HAS_CYCLE"
+  },
+  {
+   "from": "Project:akka-graph-loop",
+   "to": "Cycle:17",
+   "type": "HAS_CYCLE"
+  },
+  {
+   "from": "Project:akka-graph-loop",
+   "to": "Cycle:18",
+   "type": "HAS_CYCLE"
+  },
+  {
+   "from": "Project:akka-graph-loop",
+   "to": "Cycle:19",
+   "type": "HAS_CYCLE"
+  },
+  {
+   "from": "Project:akka-graph-loop",
+   "to": "Cycle:20",
+   "type": "HAS_CYCLE"
+  },
+  {
+   "from": "Project:akka-graph-loop",
+   "to": "Cycle:21",
+   "type": "HAS_CYCLE"
+  },
+  {
+   "from": "Project:akka-graph-loop",
+   "to": "Cycle:22",
+   "type": "HAS_CYCLE"
+  },
+  {
+   "from": "Cycle:1",
+   "to": "Phase:1-plan",
+   "type": "HAS_PHASE"
+  },
+  {
+   "from": "Cycle:1",
+   "to": "Phase:1-do",
+   "type": "HAS_PHASE"
+  },
+  {
+   "from": "Cycle:1",
+   "to": "Phase:1-study",
+   "type": "HAS_PHASE"
+  },
+  {
+   "from": "Cycle:1",
+   "to": "Phase:1-act",
+   "type": "HAS_PHASE"
+  },
+  {
+   "from": "Cycle:2",
+   "to": "Phase:2-plan",
+   "type": "HAS_PHASE"
+  },
+  {
+   "from": "Cycle:2",
+   "to": "Phase:2-do",
+   "type": "HAS_PHASE"
+  },
+  {
+   "from": "Cycle:2",
+   "to": "Phase:2-study",
+   "type": "HAS_PHASE"
+  },
+  {
+   "from": "Cycle:2",
+   "to": "Phase:2-act",
+   "type": "HAS_PHASE"
+  },
+  {
+   "from": "Cycle:3",
+   "to": "Phase:3-plan",
+   "type": "HAS_PHASE"
+  },
+  {
+   "from": "Cycle:3",
+   "to": "Phase:3-do",
+   "type": "HAS_PHASE"
+  },
+  {
+   "from": "Cycle:3",
+   "to": "Phase:3-study",
+   "type": "HAS_PHASE"
+  },
+  {
+   "from": "Cycle:3",
+   "to": "Phase:3-act",
+   "type": "HAS_PHASE"
+  },
+  {
+   "from": "Cycle:4",
+   "to": "Phase:4-plan",
+   "type": "HAS_PHASE"
+  },
+  {
+   "from": "Cycle:4",
+   "to": "Phase:4-do",
+   "type": "HAS_PHASE"
+  },
+  {
+   "from": "Cycle:4",
+   "to": "Phase:4-study",
+   "type": "HAS_PHASE"
+  },
+  {
+   "from": "Cycle:4",
+   "to": "Phase:4-act",
+   "type": "HAS_PHASE"
+  },
+  {
+   "from": "Cycle:5",
+   "to": "Phase:5-plan",
+   "type": "HAS_PHASE"
+  },
+  {
+   "from": "Cycle:5",
+   "to": "Phase:5-do",
+   "type": "HAS_PHASE"
+  },
+  {
+   "from": "Cycle:5",
+   "to": "Phase:5-study",
+   "type": "HAS_PHASE"
+  },
+  {
+   "from": "Cycle:5",
+   "to": "Phase:5-act",
+   "type": "HAS_PHASE"
+  },
+  {
+   "from": "Cycle:6",
+   "to": "Phase:6-plan",
+   "type": "HAS_PHASE"
+  },
+  {
+   "from": "Cycle:6",
+   "to": "Phase:6-do",
+   "type": "HAS_PHASE"
+  },
+  {
+   "from": "Cycle:6",
+   "to": "Phase:6-study",
+   "type": "HAS_PHASE"
+  },
+  {
+   "from": "Cycle:6",
+   "to": "Phase:6-act",
+   "type": "HAS_PHASE"
+  },
+  {
+   "from": "Cycle:7",
+   "to": "Phase:7-plan",
+   "type": "HAS_PHASE"
+  },
+  {
+   "from": "Cycle:7",
+   "to": "Phase:7-do",
+   "type": "HAS_PHASE"
+  },
+  {
+   "from": "Cycle:7",
+   "to": "Phase:7-study",
+   "type": "HAS_PHASE"
+  },
+  {
+   "from": "Cycle:7",
+   "to": "Phase:7-act",
+   "type": "HAS_PHASE"
+  },
+  {
+   "from": "Cycle:8",
+   "to": "Phase:8-plan",
+   "type": "HAS_PHASE"
+  },
+  {
+   "from": "Cycle:8",
+   "to": "Phase:8-do",
+   "type": "HAS_PHASE"
+  },
+  {
+   "from": "Cycle:8",
+   "to": "Phase:8-study",
+   "type": "HAS_PHASE"
+  },
+  {
+   "from": "Cycle:8",
+   "to": "Phase:8-act",
+   "type": "HAS_PHASE"
+  },
+  {
+   "from": "Cycle:9",
+   "to": "Phase:9-plan",
+   "type": "HAS_PHASE"
+  },
+  {
+   "from": "Cycle:9",
+   "to": "Phase:9-do",
+   "type": "HAS_PHASE"
+  },
+  {
+   "from": "Cycle:9",
+   "to": "Phase:9-study",
+   "type": "HAS_PHASE"
+  },
+  {
+   "from": "Cycle:9",
+   "to": "Phase:9-act",
+   "type": "HAS_PHASE"
+  },
+  {
+   "from": "Cycle:10",
+   "to": "Phase:10-plan",
+   "type": "HAS_PHASE"
+  },
+  {
+   "from": "Cycle:10",
+   "to": "Phase:10-do",
+   "type": "HAS_PHASE"
+  },
+  {
+   "from": "Cycle:10",
+   "to": "Phase:10-study",
+   "type": "HAS_PHASE"
+  },
+  {
+   "from": "Cycle:10",
+   "to": "Phase:10-act",
+   "type": "HAS_PHASE"
+  },
+  {
+   "from": "Cycle:11",
+   "to": "Phase:11-plan",
+   "type": "HAS_PHASE"
+  },
+  {
+   "from": "Cycle:12",
+   "to": "Phase:12-plan",
+   "type": "HAS_PHASE"
+  },
+  {
+   "from": "Cycle:12",
+   "to": "Phase:12-do",
+   "type": "HAS_PHASE"
+  },
+  {
+   "from": "Cycle:12",
+   "to": "Phase:12-study",
+   "type": "HAS_PHASE"
+  },
+  {
+   "from": "Cycle:12",
+   "to": "Phase:12-act",
+   "type": "HAS_PHASE"
+  },
+  {
+   "from": "Cycle:13",
+   "to": "Phase:13-plan",
+   "type": "HAS_PHASE"
+  },
+  {
+   "from": "Cycle:13",
+   "to": "Phase:13-do",
+   "type": "HAS_PHASE"
+  },
+  {
+   "from": "Cycle:13",
+   "to": "Phase:13-study",
+   "type": "HAS_PHASE"
+  },
+  {
+   "from": "Cycle:13",
+   "to": "Phase:13-act",
+   "type": "HAS_PHASE"
+  },
+  {
+   "from": "Cycle:14",
+   "to": "Phase:14-plan",
+   "type": "HAS_PHASE"
+  },
+  {
+   "from": "Cycle:14",
+   "to": "Phase:14-do",
+   "type": "HAS_PHASE"
+  },
+  {
+   "from": "Cycle:14",
+   "to": "Phase:14-study",
+   "type": "HAS_PHASE"
+  },
+  {
+   "from": "Cycle:14",
+   "to": "Phase:14-act",
+   "type": "HAS_PHASE"
+  },
+  {
+   "from": "Cycle:15",
+   "to": "Phase:15-plan",
+   "type": "HAS_PHASE"
+  },
+  {
+   "from": "Cycle:15",
+   "to": "Phase:15-do",
+   "type": "HAS_PHASE"
+  },
+  {
+   "from": "Cycle:15",
+   "to": "Phase:15-study",
+   "type": "HAS_PHASE"
+  },
+  {
+   "from": "Cycle:15",
+   "to": "Phase:15-act",
+   "type": "HAS_PHASE"
+  },
+  {
+   "from": "Cycle:16",
+   "to": "Phase:16-plan",
+   "type": "HAS_PHASE"
+  },
+  {
+   "from": "Cycle:16",
+   "to": "Phase:16-do",
+   "type": "HAS_PHASE"
+  },
+  {
+   "from": "Cycle:16",
+   "to": "Phase:16-study",
+   "type": "HAS_PHASE"
+  },
+  {
+   "from": "Cycle:16",
+   "to": "Phase:16-act",
+   "type": "HAS_PHASE"
+  },
+  {
+   "from": "Cycle:17",
+   "to": "Phase:17-plan",
+   "type": "HAS_PHASE"
+  },
+  {
+   "from": "Cycle:17",
+   "to": "Phase:17-do",
+   "type": "HAS_PHASE"
+  },
+  {
+   "from": "Cycle:17",
+   "to": "Phase:17-study",
+   "type": "HAS_PHASE"
+  },
+  {
+   "from": "Cycle:17",
+   "to": "Phase:17-act",
+   "type": "HAS_PHASE"
+  },
+  {
+   "from": "Cycle:18",
+   "to": "Phase:18-plan",
+   "type": "HAS_PHASE"
+  },
+  {
+   "from": "Cycle:18",
+   "to": "Phase:18-do",
+   "type": "HAS_PHASE"
+  },
+  {
+   "from": "Cycle:18",
+   "to": "Phase:18-study",
+   "type": "HAS_PHASE"
+  },
+  {
+   "from": "Cycle:18",
+   "to": "Phase:18-act",
+   "type": "HAS_PHASE"
+  },
+  {
+   "from": "Cycle:19",
+   "to": "Phase:19-plan",
+   "type": "HAS_PHASE"
+  },
+  {
+   "from": "Cycle:19",
+   "to": "Phase:19-do",
+   "type": "HAS_PHASE"
+  },
+  {
+   "from": "Cycle:19",
+   "to": "Phase:19-study",
+   "type": "HAS_PHASE"
+  },
+  {
+   "from": "Cycle:19",
+   "to": "Phase:19-act",
+   "type": "HAS_PHASE"
+  },
+  {
+   "from": "Cycle:20",
+   "to": "Phase:20-plan",
+   "type": "HAS_PHASE"
+  },
+  {
+   "from": "Cycle:20",
+   "to": "Phase:20-do",
+   "type": "HAS_PHASE"
+  },
+  {
+   "from": "Cycle:20",
+   "to": "Phase:20-study",
+   "type": "HAS_PHASE"
+  },
+  {
+   "from": "Cycle:20",
+   "to": "Phase:20-act",
+   "type": "HAS_PHASE"
+  },
+  {
+   "from": "Cycle:21",
+   "to": "Phase:21-plan",
+   "type": "HAS_PHASE"
+  },
+  {
+   "from": "Cycle:21",
+   "to": "Phase:21-do",
+   "type": "HAS_PHASE"
+  },
+  {
+   "from": "Cycle:21",
+   "to": "Phase:21-study",
+   "type": "HAS_PHASE"
+  },
+  {
+   "from": "Cycle:21",
+   "to": "Phase:21-act",
+   "type": "HAS_PHASE"
+  },
+  {
+   "from": "Cycle:22",
+   "to": "Phase:22-plan",
+   "type": "HAS_PHASE"
+  },
+  {
+   "from": "Cycle:22",
+   "to": "Phase:22-do",
+   "type": "HAS_PHASE"
+  },
+  {
+   "from": "Cycle:22",
+   "to": "Phase:22-study",
+   "type": "HAS_PHASE"
+  },
+  {
+   "from": "Cycle:22",
+   "to": "Phase:22-act",
+   "type": "HAS_PHASE"
+  },
+  {
+   "from": "Cycle:1",
+   "to": "Cycle:2",
+   "type": "NEXT"
+  },
+  {
+   "from": "Cycle:2",
+   "to": "Cycle:3",
+   "type": "NEXT"
+  },
+  {
+   "from": "Cycle:3",
+   "to": "Cycle:4",
+   "type": "NEXT"
+  },
+  {
+   "from": "Cycle:4",
+   "to": "Cycle:5",
+   "type": "NEXT"
+  },
+  {
+   "from": "Cycle:5",
+   "to": "Cycle:6",
+   "type": "NEXT"
+  },
+  {
+   "from": "Cycle:6",
+   "to": "Cycle:7",
+   "type": "NEXT"
+  },
+  {
+   "from": "Cycle:7",
+   "to": "Cycle:8",
+   "type": "NEXT"
+  },
+  {
+   "from": "Cycle:8",
+   "to": "Cycle:9",
+   "type": "NEXT"
+  },
+  {
+   "from": "Cycle:9",
+   "to": "Cycle:10",
+   "type": "NEXT"
+  },
+  {
+   "from": "Cycle:10",
+   "to": "Cycle:11",
+   "type": "NEXT"
+  },
+  {
+   "from": "Cycle:11",
+   "to": "Cycle:12",
+   "type": "NEXT"
+  },
+  {
+   "from": "Cycle:12",
+   "to": "Cycle:13",
+   "type": "NEXT"
+  },
+  {
+   "from": "Cycle:13",
+   "to": "Cycle:14",
+   "type": "NEXT"
+  },
+  {
+   "from": "Cycle:14",
+   "to": "Cycle:15",
+   "type": "NEXT"
+  },
+  {
+   "from": "Cycle:15",
+   "to": "Cycle:16",
+   "type": "NEXT"
+  },
+  {
+   "from": "Cycle:16",
+   "to": "Cycle:17",
+   "type": "NEXT"
+  },
+  {
+   "from": "Cycle:17",
+   "to": "Cycle:18",
+   "type": "NEXT"
+  },
+  {
+   "from": "Cycle:18",
+   "to": "Cycle:19",
+   "type": "NEXT"
+  },
+  {
+   "from": "Cycle:19",
+   "to": "Cycle:20",
+   "type": "NEXT"
+  },
+  {
+   "from": "Cycle:20",
+   "to": "Cycle:21",
+   "type": "NEXT"
+  },
+  {
+   "from": "Cycle:21",
+   "to": "Cycle:22",
+   "type": "NEXT"
+  },
+  {
+   "from": "Cycle:5",
+   "to": "Cycle:4",
+   "type": "REINFORCES"
+  },
+  {
+   "from": "Cycle:13",
+   "to": "Cycle:12",
+   "type": "REINFORCES"
+  },
+  {
+   "from": "Cycle:15",
+   "to": "Cycle:14",
+   "type": "REINFORCES"
+  },
+  {
+   "from": "Cycle:16",
+   "to": "Cycle:15",
+   "type": "REINFORCES"
+  },
+  {
+   "from": "Cycle:21",
+   "to": "Cycle:20",
+   "type": "REINFORCES"
+  }
+ ]
+}
