@@ -109,6 +109,12 @@ public class PdsaMetricsTests
             Assert.Equal("", phase.LatencyMs);               // 새 컬럼은 기본값
             Assert.False(phase.HasMetrics);
 
+            // 회차 조회(show/history 의 근간)도 구 스키마 DB 에서 그대로 동작해야 한다.
+            Assert.Equal("옛 계획", wf.Cycle(1)!.Phases.Single().Input);
+            Assert.Equal(new long[] { 1 }, wf.Range().Select(c => c.Id).ToArray());
+            Assert.Equal((0, Array.Empty<long>()),
+                (wf.ReinforceLinks(1).Reinforces, wf.ReinforceLinks(1).ReinforcedBy.ToArray()));
+
             // 마이그레이션 후 새 사이클에는 계측이 정상 기록된다.
             var cid = wf.StartCycleWithPlan(0, "새 계획", "서술",
                 new Dictionary<string, string> { [PdsaWorkflow.LatencyMsKey] = "111" });
