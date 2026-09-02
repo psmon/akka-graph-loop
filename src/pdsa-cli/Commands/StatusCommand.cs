@@ -23,7 +23,8 @@ public sealed class StatusCommand : ICliCommand
             var cyclesJson = s.Workflow.Recent(limit)
                 .Select(c => new CycleJson(c.Id, c.Status, c.Started, c.Verdict,
                     c.Phases.Select(p => new PhaseJson(
-                        p.Kind, p.Input, p.Llm, p.Created, p.Expected, p.Verdict, p.Actual, p.Reinforce)).ToList()))
+                        p.Kind, p.Input, p.Llm, p.Created, p.Expected, p.Verdict, p.Actual, p.Reinforce,
+                        MetricsMap.From(p))).ToList()))
                 .ToList();
             JsonOut.Write(
                 new StatusJson(s.Project, s.DbPath, s.LlmConfigured, s.Workflow.CycleCount(),

@@ -22,13 +22,18 @@ public sealed class DoCommand : ICliCommand
         if (cur is null) { Console.Error.WriteLine("진행 중인 사이클이 없습니다. 먼저 `pdsa plan` 으로 계획을 입력하세요."); return 3; }
 
         var cid = cur.Value.Id;
-        var plan = s.Workflow.GetPhase(cid, PdsaWorkflow.PlanKind)?.Input ?? "";
-        var organized = await Spinner.RunAsync("코칭 중", c => s.Coach.OrganizeDoAsync(plan, done, c), ct);
-        s.Workflow.RecordPhase(cid, PdsaWorkflow.DoKind, done, organized);
+        var planPhase = s.Workflow.GetPhase(cid, PdsaWorkflow.PlanKind);
+        if (planPhase is null) { Console.Error.WriteLine(CycleGuard.OrphanMessage(cid)); return 3; }
+
+        var metrics = new PhaseMetrics(s.Llm);
+        var organized = await Spinner.RunAsync("코칭 중", c => s.Coach.OrganizeDoAsync(planPhase.Input, done, c), ct);
+        var extra = metrics.Collect();
+        s.Workflow.RecordPhase(cid, PdsaWorkflow.DoKind, done, organized, extra);
 
         if (ArgUtil.Flag(args, "--json"))
         {
-            JsonOut.Write(new DoJson(s.Project, cid, organized, s.Coach.Enabled), PdsaJson.Default.DoJson);
+            JsonOut.Write(new DoJson(s.Project, cid, organized, s.Coach.Enabled, MetricsMap.From(extra)),
+                PdsaJson.Default.DoJson);
             return 0;
         }
 

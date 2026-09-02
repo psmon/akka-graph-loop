@@ -75,4 +75,59 @@ public class PdsaJsonTests
         var got = doc.RootElement.GetProperty("cycles")[0].GetProperty("phases")[0].GetProperty("input").GetString();
         Assert.Equal(longInput, got);   // 미절삭 전체
     }
+
+    // ── 계측(metrics) 필드: 가산적 확장이므로 기존 필드는 하나도 바뀌면 안 된다 ──
+
+    [Fact]
+    public void Metrics_are_exposed_when_measured()
+    {
+        var json = JsonSerializer.Serialize(
+            new PlanJson("proj", 7, 0, "기대", "서술", true,
+                new MetricsJson(2346, 2, "gpt-5.6-terra", 1200, 450)),
+            PdsaJson.Default.PlanJson);
+
+        using var doc = JsonDocument.Parse(json);
+        var m = doc.RootElement.GetProperty("metrics");
+        Assert.Equal(2346, m.GetProperty("latencyMs").GetInt64());
+        Assert.Equal(2, m.GetProperty("attempts").GetInt32());
+        Assert.Equal("gpt-5.6-terra", m.GetProperty("model").GetString());
+        Assert.Equal(1200, m.GetProperty("promptTokens").GetInt32());
+        Assert.Equal(450, m.GetProperty("completionTokens").GetInt32());
+    }
+
+    [Fact]
+    public void Existing_contract_is_unchanged_when_no_metrics_are_present()
+    {
+        // 계측 인자를 생략한 기존 호출 형태가 그대로 컴파일·직렬화되어야 한다.
+        var json = JsonSerializer.Serialize(
+            new StudyJson("proj", 7, "기대", "met", "실제", "서술", true), PdsaJson.Default.StudyJson);
+
+        using var doc = JsonDocument.Parse(json);
+        var r = doc.RootElement;
+        foreach (var field in new[] { "project", "cycle", "expected", "verdict", "actual", "narrative", "llmEnabled" })
+            Assert.True(r.TryGetProperty(field, out _), $"기존 필드 누락: {field}");
+        Assert.Equal(JsonValueKind.Null, r.GetProperty("metrics").ValueKind);
+    }
+
+    [Fact]
+    public void Metrics_map_omits_fields_that_were_not_measured()
+    {
+        var mapped = MetricsMap.From(new Dictionary<string, string>
+        {
+            [AkkaGraphLoop.Core.Pdsa.PdsaWorkflow.LatencyMsKey] = "500",
+            ["expected"] = "무관한 키는 무시",
+        });
+
+        Assert.NotNull(mapped);
+        Assert.Equal(500, mapped!.latencyMs);
+        Assert.Null(mapped.attempts);
+        Assert.Null(mapped.model);
+        Assert.Null(mapped.promptTokens);
+    }
+
+    [Fact]
+    public void Metrics_map_returns_null_when_nothing_was_measured()
+    {
+        Assert.Null(MetricsMap.From(new Dictionary<string, string> { ["expected"] = "기대" }));
+    }
 }

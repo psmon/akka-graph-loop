@@ -24,7 +24,8 @@ public sealed class CheckCommand : ICliCommand
         var (url, masked, model, reasoning, auth, source, _) = OpenAiConfig.Describe();
         Console.WriteLine($"LLM 호출 확인 중… base_url={url}  model={model}  auth={auth}  reasoning={reasoning}  key={masked} ({source})");
 
-        var llm = LlmClientFactory.Create(options);
+        // 진단 명령은 재시도하지 않는다 — 재시도가 성공하면 실제 장애를 가려 "정상"으로 보고하게 된다.
+        var llm = LlmClientFactory.Create(options, maxRetries: 0);
         var sw = Stopwatch.StartNew();
         try
         {

@@ -26,18 +26,31 @@ public sealed class StudyCommand : ICliCommand
 
         var cid = cur.Value.Id;
         var planPhase = s.Workflow.GetPhase(cid, PdsaWorkflow.PlanKind);
-        var expected = planPhase?.Expected ?? "";
-        var plan = planPhase?.Input ?? "";
-        var done = s.Workflow.GetPhase(cid, PdsaWorkflow.DoKind)?.Input ?? "";
+        if (planPhase is null) { Console.Error.WriteLine(CycleGuard.OrphanMessage(cid)); return 3; }
 
-        var judgment = await Spinner.RunAsync("판정 중", c => s.Coach.JudgeAsync(expected, plan, done, study, c), ct);
-        s.Workflow.RecordPhase(cid, PdsaWorkflow.StudyKind, study, judgment.Narrative,
-            new Dictionary<string, string> { ["verdict"] = judgment.Verdict, ["actual"] = judgment.Actual });
+        var expected = planPhase.Expected;
+        var plan = planPhase.Input;
+        var doPhase = s.Workflow.GetPhase(cid, PdsaWorkflow.DoKind);
+        var done = doPhase?.Input ?? "";
+
+        // 이 사이클에서 실제로 계측된 값을 판정 근거로 넘긴다 — Study 가 인상이 아니라 데이터로 판정하도록.
+        var measured = MetricsEvidence(planPhase, doPhase);
+
+        var metrics = new PhaseMetrics(s.Llm);
+        var judgment = await Spinner.RunAsync("판정 중",
+            c => s.Coach.JudgeAsync(expected, plan, done, study, c, measured), ct);
+        var extra = metrics.Collect(new Dictionary<string, string>
+        {
+            ["verdict"] = judgment.Verdict,
+            ["actual"] = judgment.Actual,
+        });
+        s.Workflow.RecordPhase(cid, PdsaWorkflow.StudyKind, study, judgment.Narrative, extra);
 
         if (ArgUtil.Flag(args, "--json"))
         {
             JsonOut.Write(
-                new StudyJson(s.Project, cid, expected, judgment.Verdict, judgment.Actual, judgment.Narrative, s.Coach.Enabled),
+                new StudyJson(s.Project, cid, expected, judgment.Verdict, judgment.Actual, judgment.Narrative,
+                    s.Coach.Enabled, MetricsMap.From(extra)),
                 PdsaJson.Default.StudyJson);
             return 0;
         }
@@ -60,6 +73,20 @@ public sealed class StudyCommand : ICliCommand
         Console.WriteLine();
         Console.WriteLine("▶ 다음: `pdsa act` 로 학습을 정리하고 필요 시 보강 액션을 확인하세요.");
         return 0;
+    }
+
+    /// <summary>
+    /// 이 사이클의 앞선 단계들이 남긴 계측치를 판정 프롬프트용 근거 블록으로 만든다.
+    /// 계측이 없으면(구 버전이 기록한 사이클, LLM 미설정) 빈 문자열 — 없는 근거를 지어내지 않는다.
+    /// </summary>
+    private static string MetricsEvidence(params PdsaPhase?[] phases)
+    {
+        var lines = phases
+            .Where(p => p is not null)
+            .Select(p => p!.MetricsLine())
+            .Where(line => line.Length > 0)
+            .ToArray();
+        return string.Join("\n", lines);
     }
 
     private static string VerdictLabel(string v) => v switch

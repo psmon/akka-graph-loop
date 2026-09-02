@@ -67,21 +67,29 @@ public sealed class PdsaCoach(ILlmClient? llm, string lang = "ko")
           "- Point out the gap between plan and execution.\n\n[Plan]\n" + plan + "\n\n[Do]\n" + done, ct);
 
     /// <summary>Plan 의 기대 평가와 결과를 비교해 판정(met/partial/unmet)하고 학습을 서술한다.</summary>
-    public async Task<StudyJudgment> JudgeAsync(string expected, string plan, string done, string study, CancellationToken ct)
+    /// <param name="measured">
+    /// 이 사이클에서 실제로 <b>계측된</b> 값(단계별 지연·시도횟수·토큰). 비어 있지 않으면 판정 프롬프트에
+    /// 주입해, Study 가 인상이 아니라 실측 근거 위에서 판정하도록 한다.
+    /// </param>
+    public async Task<StudyJudgment> JudgeAsync(string expected, string plan, string done, string study,
+        CancellationToken ct = default, string measured = "")
     {
+        var evidence = string.IsNullOrWhiteSpace(measured) ? "" : (_ko
+            ? "\n\n[이 사이클의 실측 계측치 — 판정 근거로 사용]\n" + measured.Trim()
+            : "\n\n[Measured telemetry for this cycle — use as evidence]\n" + measured.Trim());
         var prompt = _ko
             ? "아래 한 사이클의 결과를 Study(학습) 관점으로 분석하고, Plan 의 '기대 평가' 대비 달성 여부를 판정하세요.\n" +
               "출력 형식(반드시 준수):\n" +
               "  첫 줄: `판정: met|partial|unmet`  (기대를 완전 충족=met, 부분=partial, 미충족=unmet)\n" +
               "  둘째 줄: `실제: <측정값/근거를 한 문장으로>`\n" +
               "  이후: 무엇을 배웠나 / 가설 지지·기각(근거) / 개선점.\n\n" +
-              "[기대 평가]\n" + expected + "\n\n[Plan]\n" + plan + "\n\n[Do]\n" + done + "\n\n[Study 입력]\n" + study
+              "[기대 평가]\n" + expected + "\n\n[Plan]\n" + plan + "\n\n[Do]\n" + done + "\n\n[Study 입력]\n" + study + evidence
             : "Analyze the cycle's result from a Study (learning) view and judge attainment vs. the Plan's Expected outcome.\n" +
               "Output format (must follow):\n" +
               "  First line: `Verdict: met|partial|unmet`  (fully met=met, partial=partial, not met=unmet)\n" +
               "  Second line: `Actual: <one sentence of measurement/evidence>`\n" +
               "  Then: what we learned / hypothesis supported·refuted (evidence) / improvements.\n\n" +
-              "[Expected]\n" + expected + "\n\n[Plan]\n" + plan + "\n\n[Do]\n" + done + "\n\n[Study input]\n" + study;
+              "[Expected]\n" + expected + "\n\n[Plan]\n" + plan + "\n\n[Do]\n" + done + "\n\n[Study input]\n" + study + evidence;
         var text = await Ask(prompt, ct);
         if (text.Length == 0) return new StudyJudgment("", "", "");
         return new StudyJudgment(

@@ -18,6 +18,9 @@ public sealed class PdsaSession : IDisposable
     public bool LlmConfigured { get; }
     public string? LlmNote { get; }
 
+    /// <summary>이 세션의 LLM 클라이언트(미설정이면 null). 단계 계측(<see cref="PhaseMetrics"/>)에 넘긴다.</summary>
+    public ILlmClient? Llm => _llm;
+
     private readonly ILlmClient? _llm;
 
     private PdsaSession(string project, string dbPath, string lang, PdsaWorkflow workflow, PdsaCoach coach, ILlmClient? llm, string? note)

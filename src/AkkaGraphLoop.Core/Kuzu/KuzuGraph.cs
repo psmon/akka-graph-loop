@@ -35,6 +35,46 @@ public sealed class KuzuGraph : IDisposable
     }
 
     /// <summary>
+    /// 명시적 트랜잭션을 연다. <see cref="KuzuTransaction.Commit"/> 없이 Dispose 되면
+    /// <c>ROLLBACK</c> 한다(= 예외로 빠져나가면 부분 쓰기가 남지 않는다).
+    /// 여러 문(statement)에 걸친 쓰기를 한 단위로 묶을 때 사용한다.
+    /// </summary>
+    public KuzuTransaction BeginTransaction() => new(this);
+
+    /// <summary>
+    /// <see cref="KuzuGraph.BeginTransaction"/> 이 반환하는 트랜잭션 스코프.
+    /// 성공 경로에서만 <see cref="Commit"/> 을 부르고, 그 외에는 Dispose 가 롤백한다.
+    /// </summary>
+    public sealed class KuzuTransaction : IDisposable
+    {
+        private readonly KuzuGraph _graph;
+        private bool _settled;
+
+        internal KuzuTransaction(KuzuGraph graph)
+        {
+            _graph = graph;
+            _graph.Execute("BEGIN TRANSACTION");
+        }
+
+        /// <summary>변경을 확정한다. 한 번만 유효하다.</summary>
+        public void Commit()
+        {
+            if (_settled) return;
+            _settled = true;
+            _graph.Execute("COMMIT");
+        }
+
+        /// <summary>Commit 되지 않았으면 롤백한다(예외 전파 중일 수 있으므로 실패는 삼킨다).</summary>
+        public void Dispose()
+        {
+            if (_settled) return;
+            _settled = true;
+            try { _graph.Execute("ROLLBACK"); }
+            catch { /* 이미 중단된 트랜잭션 — 원 예외를 가리지 않는다 */ }
+        }
+    }
+
+    /// <summary>
     /// 파라미터 바인딩으로 Cypher 를 실행한다(임의 텍스트를 이스케이프 없이 안전하게 처리).
     /// 값 타입: <see cref="string"/> 또는 <see cref="long"/>/<see cref="int"/>. Cypher 에서는 <c>$name</c> 로 참조.
     /// </summary>
