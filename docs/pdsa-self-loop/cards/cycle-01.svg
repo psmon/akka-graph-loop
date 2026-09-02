@@ -9,7 +9,7 @@
 <text x="52" y="178" fill="#eef2fb" font-size="34" font-weight="700">Verify the CLI basics and grow the unit tests</text>
 <line x1="52" y1="228" x2="908" y2="228" stroke="#26304a" stroke-width="1"/>
 <text x="52" y="268" fill="#7b8ab8" font-size="13" font-weight="700" letter-spacing="3">WHAT WE LEARNED</text>
-<text x="52" y="302" fill="#c2ccE4" font-size="19">The loop recorded four steps but had no expected outcome to</text>
-<text x="52" y="332" fill="#c2ccE4" font-size="19">compare against, so nothing could be judged.</text>
+<text x="52" y="302" fill="#c2ccE4" font-size="19">The loop recorded four steps but had no expected outcome to compare against, so</text>
+<text x="52" y="332" fill="#c2ccE4" font-size="19">nothing could be judged.</text>
 <text x="52" y="364" fill="#7b8ab8" font-size="15" font-weight="600">no verdict field yet</text>
 </svg>

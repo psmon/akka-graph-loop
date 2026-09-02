@@ -9,7 +9,7 @@
 <text x="52" y="178" fill="#eef2fb" font-size="34" font-weight="700">Cover the pure Cli/Llm logic with unit tests</text>
 <line x1="52" y1="228" x2="908" y2="228" stroke="#26304a" stroke-width="1"/>
 <text x="52" y="268" fill="#7b8ab8" font-size="13" font-weight="700" letter-spacing="3">WHAT WE LEARNED</text>
-<text x="52" y="302" fill="#c2ccE4" font-size="19">Testing the pure logic first made every later refactor cheap -</text>
-<text x="52" y="332" fill="#c2ccE4" font-size="19">the auth and i18n rewrites landed on top of it.</text>
+<text x="52" y="302" fill="#c2ccE4" font-size="19">Testing the pure logic first made every later refactor cheap - the auth and i18n</text>
+<text x="52" y="332" fill="#c2ccE4" font-size="19">rewrites landed on top of it.</text>
 <text x="52" y="364" fill="#7b8ab8" font-size="15" font-weight="600">no verdict field yet</text>
 </svg>

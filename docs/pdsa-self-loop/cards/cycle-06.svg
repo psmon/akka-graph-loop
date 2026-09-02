@@ -9,7 +9,7 @@
 <text x="52" y="178" fill="#eef2fb" font-size="34" font-weight="700">Auth abstraction: AuthMode + IAuthProvider</text>
 <line x1="52" y1="228" x2="908" y2="228" stroke="#26304a" stroke-width="1"/>
 <text x="52" y="268" fill="#f5c451" font-size="13" font-weight="700" letter-spacing="3">WHAT WE LEARNED</text>
-<text x="52" y="302" fill="#c2ccE4" font-size="19">Keyless mode is only safe when it is limited to private ranges</text>
-<text x="52" y="332" fill="#c2ccE4" font-size="19">and a remote endpoint demands an explicit opt-in.</text>
+<text x="52" y="302" fill="#c2ccE4" font-size="19">Keyless mode is only safe when it is limited to private ranges and a remote endpoint</text>
+<text x="52" y="332" fill="#c2ccE4" font-size="19">demands an explicit opt-in.</text>
 <text x="52" y="364" fill="#7b8ab8" font-size="15" font-weight="600">91 tests</text>
 </svg>

@@ -1,7 +1,7 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 472" width="960" height="472" font-family="Inter, Segoe UI, Helvetica, Arial, sans-serif" role="img" aria-label="PDSA cycle 4: Close the loop: expected -&gt; verdict -&gt; REINFORCES">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 442" width="960" height="442" font-family="Inter, Segoe UI, Helvetica, Arial, sans-serif" role="img" aria-label="PDSA cycle 4: Close the loop: expected -&gt; verdict -&gt; REINFORCES">
 <defs><linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#141b2d"/><stop offset="100%" stop-color="#0b0f1a"/></linearGradient></defs>
-<rect width="960" height="472" rx="22" fill="url(#bg)"/>
-<rect width="10" height="472" rx="5" fill="#f5c451"/>
+<rect width="960" height="442" rx="22" fill="url(#bg)"/>
+<rect width="10" height="442" rx="5" fill="#f5c451"/>
 <text x="52" y="86" fill="#f5c451" font-size="17" font-weight="700" letter-spacing="3.5">CYCLE 04</text>
 <text x="52" y="116" fill="#6f7d9c" font-size="15" letter-spacing="1.2">2026-08-26 &#183; THE LOOP CLOSES</text>
 <rect x="740" y="60" width="168" height="38" rx="19" fill="#2e2410" stroke="#f5c451" stroke-opacity="0.55"/>
@@ -10,9 +10,8 @@
 <text x="52" y="222" fill="#eef2fb" font-size="34" font-weight="700">REINFORCES</text>
 <line x1="52" y1="272" x2="908" y2="272" stroke="#26304a" stroke-width="1"/>
 <text x="52" y="312" fill="#f5c451" font-size="13" font-weight="700" letter-spacing="3">WHAT WE LEARNED</text>
-<text x="52" y="346" fill="#c2ccE4" font-size="19">One passing example does not prove the judging criteria are</text>
-<text x="52" y="376" fill="#c2ccE4" font-size="19">stable. The loop could finally judge itself - and its first</text>
-<text x="52" y="406" fill="#c2ccE4" font-size="19">verdict on itself was 'partial'.</text>
-<text x="52" y="438" fill="#7b8ab8" font-size="15" font-weight="600">73 tests</text>
-<text x="908" y="438" fill="#f5c451" font-size="15" text-anchor="end">&#8618; reinforced by #5</text>
+<text x="52" y="346" fill="#c2ccE4" font-size="19">One passing example does not prove the judging criteria are stable. The loop could</text>
+<text x="52" y="376" fill="#c2ccE4" font-size="19">finally judge itself - and its first verdict on itself was 'partial'.</text>
+<text x="52" y="408" fill="#7b8ab8" font-size="15" font-weight="600">73 tests</text>
+<text x="908" y="408" fill="#f5c451" font-size="15" text-anchor="end">&#8618; reinforced by #5</text>
 </svg>

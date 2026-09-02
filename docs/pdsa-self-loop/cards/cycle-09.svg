@@ -9,8 +9,8 @@
 <text x="52" y="178" fill="#eef2fb" font-size="34" font-weight="700">pdsa init: embed the skill inside the binary</text>
 <line x1="52" y1="228" x2="908" y2="228" stroke="#26304a" stroke-width="1"/>
 <text x="52" y="268" fill="#f5c451" font-size="13" font-weight="700" letter-spacing="3">WHAT WE LEARNED</text>
-<text x="52" y="302" fill="#c2ccE4" font-size="19">Culture-coded resource names (SKILL.en.md) are split into</text>
-<text x="52" y="332" fill="#c2ccE4" font-size="19">satellite assemblies by MSBuild. WithCulture=false plus an</text>
-<text x="52" y="362" fill="#c2ccE4" font-size="19">explicit LogicalName keeps them in the main assembly.</text>
+<text x="52" y="302" fill="#c2ccE4" font-size="19">Culture-coded resource names (SKILL.en.md) are split into satellite assemblies by</text>
+<text x="52" y="332" fill="#c2ccE4" font-size="19">MSBuild. WithCulture=false plus an explicit LogicalName keeps them in the main</text>
+<text x="52" y="362" fill="#c2ccE4" font-size="19">assembly.</text>
 <text x="52" y="394" fill="#7b8ab8" font-size="15" font-weight="600">141 tests</text>
 </svg>

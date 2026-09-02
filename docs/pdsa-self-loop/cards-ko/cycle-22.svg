@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 398" width="960" height="398" font-family="Pretendard, Malgun Gothic, Apple SD Gothic Neo, Noto Sans KR, sans-serif" role="img" aria-label="PDSA cycle 22: history 와 show: 루프 자신의 과거를 조회한다">
+<defs><linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#141b2d"/><stop offset="100%" stop-color="#0b0f1a"/></linearGradient></defs>
+<rect width="960" height="398" rx="22" fill="url(#bg)"/>
+<rect width="10" height="398" rx="5" fill="#3ddc97"/>
+<text x="52" y="86" fill="#3ddc97" font-size="17" font-weight="700" letter-spacing="3.5">사이클 22</text>
+<text x="52" y="116" fill="#6f7d9c" font-size="15" letter-spacing="1.2">2026-09-02 &#183; 루프가 자신을 감사한다</text>
+<rect x="740" y="60" width="168" height="38" rx="19" fill="#0d2b21" stroke="#3ddc97" stroke-opacity="0.55"/>
+<text x="824" y="85" fill="#3ddc97" font-size="15" font-weight="700" letter-spacing="2.4" text-anchor="middle">충족</text>
+<text x="52" y="178" fill="#eef2fb" font-size="34" font-weight="700">history 와 show: 루프 자신의 과거를 조회한다</text>
+<line x1="52" y1="228" x2="908" y2="228" stroke="#26304a" stroke-width="1"/>
+<text x="52" y="268" fill="#3ddc97" font-size="13" font-weight="700" letter-spacing="3">무엇을 배웠나</text>
+<text x="52" y="302" fill="#c2ccE4" font-size="19">도그푸딩이 공백을 찾았다. 바로 이 문서를 쓰는 일이 그래프를 손으로 파싱하지 않고는</text>
+<text x="52" y="332" fill="#c2ccE4" font-size="19">불가능했고, 그 빠진 조회가 다음 사이클이 됐다.</text>
+<text x="52" y="364" fill="#7b8ab8" font-size="15" font-weight="600">테스트 271개</text>
+</svg>

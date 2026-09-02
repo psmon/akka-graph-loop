@@ -10,7 +10,7 @@
 <text x="52" y="222" fill="#eef2fb" font-size="34" font-weight="700">without a restart</text>
 <line x1="52" y1="272" x2="908" y2="272" stroke="#26304a" stroke-width="1"/>
 <text x="52" y="312" fill="#7b8ab8" font-size="13" font-weight="700" letter-spacing="3">WHAT WE LEARNED</text>
-<text x="52" y="346" fill="#c2ccE4" font-size="19">Seeing the accumulated graph made the missing pieces obvious -</text>
-<text x="52" y="376" fill="#c2ccE4" font-size="19">you cannot improve what you cannot look at.</text>
+<text x="52" y="346" fill="#c2ccE4" font-size="19">Seeing the accumulated graph made the missing pieces obvious - you cannot improve what</text>
+<text x="52" y="376" fill="#c2ccE4" font-size="19">you cannot look at.</text>
 <text x="52" y="408" fill="#7b8ab8" font-size="15" font-weight="600">no verdict field yet</text>
 </svg>
