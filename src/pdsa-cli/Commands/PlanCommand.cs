@@ -23,22 +23,27 @@ public sealed class PlanCommand : ICliCommand
 
         using var s = PdsaSession.Open(args);
 
-        // 직전 사이클이 보강을 요구했으면(그리고 --fresh 아니면) 이번을 보강 사이클로 잇는다.
+        // 직전 사이클이 보강을 요구했으면(그리고 --fresh 아니면) 이번을 보강 사이클로 잇는다(읽기 전용).
         var reinforceOf = ArgUtil.Flag(args, "--fresh") ? 0 : s.Workflow.PendingReinforceTarget();
-        var cid = s.Workflow.StartCycle(reinforceOf);
 
         // 누적 그래프 메모리 되먹임: 최근 사이클 학습을 코칭 프롬프트에 주입(--no-recall 로 생략).
         var priorLearnings = s.Coach.Enabled && !ArgUtil.Flag(args, "--no-recall")
             ? LearningFormat.ToPromptBlock(s.Workflow.RecentLearnings(3))
             : "";
+
+        // 코칭이 성공한 뒤에야 그래프에 쓴다. 여기서 실패/취소되면 사이클은 생성되지 않는다
+        // (이전에는 StartCycle 이 먼저라 실패마다 Phase 0개짜리 고아 사이클이 남았다).
+        var metrics = new PhaseMetrics(s.Llm);
         var coaching = await Spinner.RunAsync("코칭 중", c => s.Coach.HypothesisAsync(plan, priorLearnings, c), ct);
         var expected = ArgUtil.Option(args, "--expect") ?? coaching.Expected;
-        s.Workflow.RecordPhase(cid, PdsaWorkflow.PlanKind, plan, coaching.Narrative,
-            new Dictionary<string, string> { ["expected"] = expected });
+
+        var extra = metrics.Collect(new Dictionary<string, string> { ["expected"] = expected });
+        var cid = s.Workflow.StartCycleWithPlan(reinforceOf, plan, coaching.Narrative, extra);
 
         if (ArgUtil.Flag(args, "--json"))
         {
-            JsonOut.Write(new PlanJson(s.Project, cid, reinforceOf, expected, coaching.Narrative, s.Coach.Enabled),
+            JsonOut.Write(new PlanJson(s.Project, cid, reinforceOf, expected, coaching.Narrative, s.Coach.Enabled,
+                    MetricsMap.From(extra)),
                 PdsaJson.Default.PlanJson);
             return 0;
         }

@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 398" width="960" height="398" font-family="Pretendard, Malgun Gothic, Apple SD Gothic Neo, Noto Sans KR, sans-serif" role="img" aria-label="PDSA cycle 15: 멀티프로젝트: 모든 명령에 --project">
+<defs><linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#141b2d"/><stop offset="100%" stop-color="#0b0f1a"/></linearGradient></defs>
+<rect width="960" height="398" rx="22" fill="url(#bg)"/>
+<rect width="10" height="398" rx="5" fill="#f5c451"/>
+<text x="52" y="86" fill="#f5c451" font-size="17" font-weight="700" letter-spacing="3.5">사이클 15</text>
+<text x="52" y="116" fill="#6f7d9c" font-size="15" letter-spacing="1.2">2026-08-27 &#183; 실사용 결함</text>
+<rect x="740" y="60" width="168" height="38" rx="19" fill="#2e2410" stroke="#f5c451" stroke-opacity="0.55"/>
+<text x="824" y="85" fill="#f5c451" font-size="15" font-weight="700" letter-spacing="2.4" text-anchor="middle">부분 충족</text>
+<text x="52" y="178" fill="#eef2fb" font-size="34" font-weight="700">멀티프로젝트: 모든 명령에 --project</text>
+<line x1="52" y1="228" x2="908" y2="228" stroke="#26304a" stroke-width="1"/>
+<text x="52" y="268" fill="#f5c451" font-size="13" font-weight="700" letter-spacing="3">무엇을 배웠나</text>
+<text x="52" y="302" fill="#c2ccE4" font-size="19">Positional() 이 옵션 값을 기록 본문에 접어 넣고 있어서 기능이 조용히 깨져 있었다. 값-옵션</text>
+<text x="52" y="332" fill="#c2ccE4" font-size="19">화이트리스트 하나가 plan·do·study·guide 를 한꺼번에 고쳤다.</text>
+<text x="52" y="364" fill="#7b8ab8" font-size="15" font-weight="600">테스트 191개</text>
+<text x="908" y="364" fill="#f5c451" font-size="15" text-anchor="end">&#8618; #14 를 보강</text>
+</svg>

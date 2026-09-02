@@ -9,7 +9,26 @@ namespace AkkaGraphLoop.Core.Pdsa;
 /// </summary>
 public sealed record PdsaPhase(
     string Kind, string Input, string Llm, string Created,
-    string Expected = "", string Verdict = "", string Actual = "", string Reinforce = "");
+    string Expected = "", string Verdict = "", string Actual = "", string Reinforce = "",
+    string LatencyMs = "", string Attempts = "", string Model = "",
+    string PromptTokens = "", string CompletionTokens = "")
+{
+    /// <summary>계측치가 하나라도 기록됐는지(Study 판정에 근거로 붙일 수 있는지).</summary>
+    public bool HasMetrics => LatencyMs.Length > 0 || Attempts.Length > 0 || PromptTokens.Length > 0;
+
+    /// <summary>프롬프트·출력에 붙일 한 줄 계측 요약. 계측이 없으면 빈 문자열.</summary>
+    public string MetricsLine()
+    {
+        if (!HasMetrics) return "";
+        var parts = new List<string>(4);
+        if (LatencyMs.Length > 0) parts.Add($"{Kind} 지연 {LatencyMs}ms");
+        if (Attempts.Length > 0 && Attempts != "1") parts.Add($"시도 {Attempts}회");
+        if (Model.Length > 0) parts.Add($"모델 {Model}");
+        if (PromptTokens.Length > 0 || CompletionTokens.Length > 0)
+            parts.Add($"토큰 {PromptTokens}/{CompletionTokens}");
+        return string.Join(" · ", parts);
+    }
+}
 
 /// <summary>한 사이클과 그 단계들의 요약(status 출력용). Verdict = 그 사이클 Study 판정.</summary>
 public sealed record PdsaCycleView(long Id, string Status, string Started, IReadOnlyList<PdsaPhase> Phases, string Verdict = "");
@@ -34,8 +53,24 @@ public sealed class PdsaWorkflow : IDisposable
     public const string StudyKind = "study";
     public const string ActKind = "act";
 
-    /// <summary>Phase 노드에 SET 가능한 폐루프 메타 컬럼 화이트리스트.</summary>
-    private static readonly string[] MetaColumns = { "expected", "verdict", "actual", "reinforce" };
+    /// <summary>
+    /// Phase 노드에 SET 가능한 메타 컬럼 화이트리스트(폐루프 + 계측).
+    /// 계측 컬럼은 Study 가 "됐다/안 됐다"를 인상이 아니라 <b>실측 근거</b> 위에서 판정하도록
+    /// 남기는 값이다. 새 컬럼은 여기에 추가하기만 하면 <see cref="MigratePhaseColumns"/> 가
+    /// 기존 DB 에 멱등하게 ALTER 로 채운다.
+    /// </summary>
+    private static readonly string[] MetaColumns =
+    {
+        "expected", "verdict", "actual", "reinforce",
+        "latencyMs", "attempts", "model", "promptTokens", "completionTokens",
+    };
+
+    /// <summary>계측 컬럼 이름(<see cref="MetaColumns"/> 의 부분집합) — 호출자가 키를 오타 없이 쓰도록 노출.</summary>
+    public const string LatencyMsKey = "latencyMs";
+    public const string AttemptsKey = "attempts";
+    public const string ModelKey = "model";
+    public const string PromptTokensKey = "promptTokens";
+    public const string CompletionTokensKey = "completionTokens";
 
     private readonly KuzuGraph _g;
     public string ProjectId { get; }
@@ -60,7 +95,9 @@ public sealed class PdsaWorkflow : IDisposable
         _g.Execute("CREATE NODE TABLE IF NOT EXISTS Cycle(id INT64, started STRING, status STRING, PRIMARY KEY(id))");
         // 신규 DB 는 폐루프 컬럼을 포함해 생성. 기존 DB 는 아래 마이그레이션이 ALTER 로 채운다.
         _g.Execute("CREATE NODE TABLE IF NOT EXISTS Phase(id STRING, cycle INT64, kind STRING, input STRING, llm STRING, created STRING, " +
-                   "expected STRING DEFAULT '', verdict STRING DEFAULT '', actual STRING DEFAULT '', reinforce STRING DEFAULT '', PRIMARY KEY(id))");
+                   "expected STRING DEFAULT '', verdict STRING DEFAULT '', actual STRING DEFAULT '', reinforce STRING DEFAULT '', " +
+                   "latencyMs STRING DEFAULT '', attempts STRING DEFAULT '', model STRING DEFAULT '', " +
+                   "promptTokens STRING DEFAULT '', completionTokens STRING DEFAULT '', PRIMARY KEY(id))");
         _g.Execute("CREATE REL TABLE IF NOT EXISTS HAS_CYCLE(FROM Project TO Cycle)");
         _g.Execute("CREATE REL TABLE IF NOT EXISTS HAS_PHASE(FROM Cycle TO Phase)");
         _g.Execute("CREATE REL TABLE IF NOT EXISTS NEXT(FROM Cycle TO Cycle)");
@@ -97,6 +134,15 @@ public sealed class PdsaWorkflow : IDisposable
     /// </summary>
     public long StartCycle(long reinforceOf = 0)
     {
+        using var tx = _g.BeginTransaction();
+        var id = StartCycleCore(reinforceOf);
+        tx.Commit();
+        return id;
+    }
+
+    /// <summary>사이클 생성의 실제 쓰기. <b>이미 열린 트랜잭션 안에서</b> 호출한다(중첩 BEGIN 불가).</summary>
+    private long StartCycleCore(long reinforceOf)
+    {
         var id = NextCycleId();
         _g.Execute("CREATE (:Cycle {id: $id, started: $started, status: 'planning'})",
             P(("id", id), ("started", Now())));
@@ -108,6 +154,29 @@ public sealed class PdsaWorkflow : IDisposable
         if (reinforceOf > 0 && reinforceOf != id)
             _g.Execute("MATCH (a:Cycle {id: $a}), (b:Cycle {id: $b}) CREATE (a)-[:REINFORCES]->(b)",
                 P(("a", id), ("b", reinforceOf)));
+        return id;
+    }
+
+    /// <summary>
+    /// 사이클 생성과 Plan 기록을 <b>한 트랜잭션</b>으로 처리한다(Plan 단계의 정식 진입점).
+    ///
+    /// <para><b>왜 필요한가</b>: <see cref="StartCycle"/> 을 LLM 호출 <i>전에</i> 부르면, 호출이
+    /// 실패/취소될 때 Phase 가 하나도 없는 <b>고아 사이클</b>이 남는다. 그 고아는
+    /// <see cref="CurrentCycle"/> 에 잡혀 다음 <c>do</c> 를 흡수하고, Plan 없는 Do → Expected 공백 →
+    /// Study 판정 불가 → 기대 충족률·되읽기 품질 저하로 연쇄한다. 즉 일시적 네트워크 오류 하나가
+    /// 장기 그래프 메모리를 훼손한다.</para>
+    ///
+    /// 따라서 호출자는 <b>LLM 코칭이 성공한 뒤에만</b> 이 메서드를 부른다. 중간에 어떤 문이라도
+    /// 실패하면 트랜잭션이 롤백되어 Cycle·엣지·Phase 가 하나도 남지 않는다.
+    /// </summary>
+    /// <returns>생성된 사이클 id.</returns>
+    public long StartCycleWithPlan(long reinforceOf, string planInput, string narrative,
+        IReadOnlyDictionary<string, string>? extra = null)
+    {
+        using var tx = _g.BeginTransaction();
+        var id = StartCycleCore(reinforceOf);
+        RecordPhaseCore(id, PlanKind, planInput, narrative, extra);
+        tx.Commit();
         return id;
     }
 
@@ -139,6 +208,15 @@ public sealed class PdsaWorkflow : IDisposable
     public void RecordPhase(long cycleId, string kind, string input, string llm,
         IReadOnlyDictionary<string, string>? extra = null)
     {
+        using var tx = _g.BeginTransaction();
+        RecordPhaseCore(cycleId, kind, input, llm, extra);
+        tx.Commit();
+    }
+
+    /// <summary>단계 기록의 실제 쓰기. <b>이미 열린 트랜잭션 안에서</b> 호출한다(중첩 BEGIN 불가).</summary>
+    private void RecordPhaseCore(long cycleId, string kind, string input, string llm,
+        IReadOnlyDictionary<string, string>? extra)
+    {
         var phaseId = $"{cycleId}-{kind}";
         _g.Execute(
             "CREATE (:Phase {id: $id, cycle: $cycle, kind: $kind, input: $input, llm: $llm, created: $created})",
@@ -155,32 +233,94 @@ public sealed class PdsaWorkflow : IDisposable
                         P(("pid", phaseId), ("val", v)));
     }
 
-    /// <summary>한 사이클의 특정 단계(텍스트 + 폐루프 메타)를 읽는다.</summary>
+    /// <summary>
+    /// 그 사이클이 Plan 없이 남은 <b>고아</b>인지. 과거(수정 이전) 버전이 만든 고아가 남아 있는 DB 에서
+    /// Do/Study/Act 가 그것을 조용히 흡수하는 것을 막기 위해 각 단계 진입 시 확인한다.
+    /// </summary>
+    public bool IsOrphanCycle(long cycleId) => GetPhase(cycleId, PlanKind) is null;
+
+    /// <summary>Phase 를 읽을 때 쓰는 반환 컬럼(폐루프 메타 + 계측). 읽기 지점 간 불일치를 막는다.</summary>
+    private const string PhaseColumns =
+        "p.kind, p.input, p.llm, p.created, p.expected, p.verdict, p.actual, p.reinforce, " +
+        "p.latencyMs, p.attempts, p.model, p.promptTokens, p.completionTokens";
+
+    private const int PhaseColumnCount = 13;
+
+    private static PdsaPhase ToPhase(string[] r) =>
+        new(r[0], r[1], r[2], r[3], r[4], r[5], r[6], r[7], r[8], r[9], r[10], r[11], r[12]);
+
+    /// <summary>한 사이클의 특정 단계(텍스트 + 폐루프 메타 + 계측)를 읽는다.</summary>
     public PdsaPhase? GetPhase(long cycleId, string kind)
     {
         var rows = _g.Query(
-            "MATCH (p:Phase {id: $id}) RETURN p.kind, p.input, p.llm, p.created, p.expected, p.verdict, p.actual, p.reinforce", 8,
+            $"MATCH (p:Phase {{id: $id}}) RETURN {PhaseColumns}", PhaseColumnCount,
             P(("id", $"{cycleId}-{kind}")));
-        if (rows.Count == 0) return null;
-        var r = rows[0];
-        return new PdsaPhase(r[0], r[1], r[2], r[3], r[4], r[5], r[6], r[7]);
+        return rows.Count == 0 ? null : ToPhase(rows[0]);
     }
 
-    /// <summary>최근 사이클들과 각 단계를 요약해 반환(status 출력용).</summary>
-    public IReadOnlyList<PdsaCycleView> Recent(int limit = 5)
+    /// <summary>최근 사이클들과 각 단계를 요약해 반환(status 출력용, 최신순).</summary>
+    public IReadOnlyList<PdsaCycleView> Recent(int limit = 5) => Fetch("", ascending: false, limit);
+
+    /// <summary>사이클 하나를 단계까지 읽는다(show 용). 없으면 null.</summary>
+    public PdsaCycleView? Cycle(long id) =>
+        Fetch("WHERE c.id = $from", ascending: true, limit: 1, from: id, to: id).FirstOrDefault();
+
+    /// <summary>
+    /// 사이클 범위를 읽는다(history 용). <paramref name="from"/>/<paramref name="to"/> 는 0 이면 무제한이고,
+    /// 기본은 <b>오름차순</b>이다 — history 는 "어떻게 여기까지 왔나"를 읽는 용도라
+    /// 최신순인 <see cref="Recent"/>(status)와 정렬 기본값이 반대다.
+    /// </summary>
+    public IReadOnlyList<PdsaCycleView> Range(long from = 0, long to = 0, bool ascending = true, int limit = 0)
     {
-        var cycleRows = _g.Query(
-            "MATCH (c:Cycle) RETURN c.id, c.status, c.started ORDER BY c.id DESC LIMIT $lim", 3,
-            P(("lim", (long)limit)));
+        var where = (from > 0, to > 0) switch
+        {
+            (true, true) => "WHERE c.id >= $from AND c.id <= $to",
+            (true, false) => "WHERE c.id >= $from",
+            (false, true) => "WHERE c.id <= $to",
+            _ => "",
+        };
+        return Fetch(where, ascending, limit, from, to);
+    }
+
+    /// <summary>
+    /// 이 사이클과 연결된 보강(<c>REINFORCES</c>) 관계.
+    /// <c>Reinforces</c> = 이 사이클이 보강하는 원 사이클, <c>ReinforcedBy</c> = 이 사이클을 보강한 사이클들.
+    /// </summary>
+    public (long Reinforces, IReadOnlyList<long> ReinforcedBy) ReinforceLinks(long cycleId)
+    {
+        var target = _g.Query("MATCH (a:Cycle {id: $id})-[:REINFORCES]->(b:Cycle) RETURN b.id", 1, P(("id", cycleId)));
+        var by = _g.Query("MATCH (a:Cycle)-[:REINFORCES]->(b:Cycle {id: $id}) RETURN a.id ORDER BY a.id", 1,
+            P(("id", cycleId)));
+        return (target.Count > 0 ? long.Parse(target[0][0], CultureInfo.InvariantCulture) : 0,
+                by.Select(r => long.Parse(r[0], CultureInfo.InvariantCulture)).ToList());
+    }
+
+    /// <summary>
+    /// 사이클 조회의 <b>단일 경로</b>. <see cref="Recent"/>/<see cref="Cycle"/>/<see cref="Range"/> 가
+    /// 모두 여기를 지나므로 조회 방식 간 데이터 불일치가 생길 수 없다.
+    /// </summary>
+    private List<PdsaCycleView> Fetch(string where, bool ascending, int limit, long from = 0, long to = 0)
+    {
+        var order = ascending ? "ASC" : "DESC";
+        var cypher = $"MATCH (c:Cycle) {where} RETURN c.id, c.status, c.started ORDER BY c.id {order}" +
+                     (limit > 0 ? " LIMIT $lim" : "");
+
+        // 파라미터는 Cypher 에 실제로 등장하는 것만 바인딩한다(미사용 파라미터는 prepare 실패).
+        var ps = new Dictionary<string, object>();
+        if (where.Contains("$from")) ps["from"] = from;
+        if (where.Contains("$to")) ps["to"] = to;
+        if (limit > 0) ps["lim"] = (long)limit;
+
+        var cycleRows = ps.Count > 0 ? _g.Query(cypher, 3, ps) : _g.Query(cypher, 3);
+
         var views = new List<PdsaCycleView>();
         foreach (var c in cycleRows)
         {
             var id = long.Parse(c[0], CultureInfo.InvariantCulture);
             var phases = _g.Query(
-                    "MATCH (:Cycle {id: $id})-[:HAS_PHASE]->(p:Phase) " +
-                    "RETURN p.kind, p.input, p.llm, p.created, p.expected, p.verdict, p.actual, p.reinforce", 8,
+                    $"MATCH (:Cycle {{id: $id}})-[:HAS_PHASE]->(p:Phase) RETURN {PhaseColumns}", PhaseColumnCount,
                     P(("id", id)))
-                .Select(r => new PdsaPhase(r[0], r[1], r[2], r[3], r[4], r[5], r[6], r[7]))
+                .Select(ToPhase)
                 .OrderBy(p => KindOrder(p.Kind))
                 .ToList();
             var verdict = phases.FirstOrDefault(p => p.Kind == StudyKind)?.Verdict ?? "";

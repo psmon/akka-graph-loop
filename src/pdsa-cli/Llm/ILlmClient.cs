@@ -41,3 +41,20 @@ public interface ILlmClient
     /// <summary>시스템/사용자 프롬프트로 한 번의 완성을 받아 텍스트를 반환한다.</summary>
     Task<string> CompleteAsync(string systemPrompt, string userPrompt, CancellationToken ct = default);
 }
+
+/// <summary>직전 LLM 호출의 계측치. 값을 모르는 항목은 0/빈 문자열.</summary>
+/// <param name="Attempts">실제 시도 횟수(재시도 포함, 최소 1).</param>
+public sealed record LlmCallStats(int Attempts, int PromptTokens, int CompletionTokens, string Model);
+
+/// <summary>
+/// 직전 호출의 계측치를 보고할 수 있는 <see cref="ILlmClient"/> 의 <b>선택적</b> 확장.
+///
+/// <para><see cref="ILlmClient.CompleteAsync"/> 의 시그니처를 바꾸면 구현체 4종과 테스트 페이크가
+/// 모두 깨지므로, 계측을 보고할 수 있는 구현체만 이 인터페이스를 추가로 구현한다.
+/// 호출자는 <c>is ILlmUsageReporter</c> 로 확인하고, 아니면 지연 시간만 기록한다.</para>
+/// </summary>
+public interface ILlmUsageReporter
+{
+    /// <summary>직전 <see cref="ILlmClient.CompleteAsync"/> 호출의 계측치(호출 전이면 null).</summary>
+    LlmCallStats? LastCall { get; }
+}

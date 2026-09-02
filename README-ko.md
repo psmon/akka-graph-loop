@@ -34,6 +34,7 @@ CLI 서포트 툴이다. Plan 에서 세운 *기대 평가*를 Study 에서 LLM 
 - 🔁 **PDSA 루프** — 데밍의 Plan–Do–Study–Act 지속개선 사이클을 실제 피드백 그래프로 구현한 별도 실행 샘플(`-- pdsa`). 각 회차는 스트림 진행 중 **Kùzu 임베디드 그래프 DB**에 실시간 기록되고 Cypher 로 되읽는다.
 - 🖥️ **그래프 뷰어** — 기록된 Kùzu 그래프를 **별도 웹 프로젝트**로 시각화(로컬 포트, 외부 CDN 없는 SVG 포스 레이아웃).
 - 🛠️ **pdsa-cli** — AI 에이전트가 PDSA 루프를 실행/기록·조회하고 LLM 조언을 받는 공식 CLI. **Native AOT 단일 실행 파일**(Akka+Kùzu 포함, 검증 완료).
+- 📖 **[자기개선 루프](docs/pdsa-self-loop/README-ko.md)** — 이 프로젝트가 자기가 만든 도구로 만들어진 기록: 22번의 PDSA 사이클을 회차별로, 회차마다 히어로 카드와 함께. 루프 자신의 그래프 메모리에서 직접 되읽어 쓴 문서다.
 - 🧪 **테스트** — `tests/AkkaGraphLoop.Tests`
   xUnit + Akka TestKit 으로 각 junction의 동작과 **사이클의 liveness(데드락 없음)** 를 검증(총 22개).
 
@@ -247,6 +248,8 @@ pdsa act                # 다음 개선 액션 코칭(사이클 종료) → 반�
 pdsa status             # 현재 프로젝트의 진행/누적 상태
 pdsa eval               # 사이클별 기대/판정/실제 + 기대 충족률
 pdsa recall "<주제>"    # 과거 사이클 학습 되읽기(계획 컨텍스트). plan 이 자동 주입
+pdsa history            # 전 사이클 타임라인(오름차순): 기대→판정→실제→배운점
+pdsa show 7             # 한 사이클 상세: 4단계·계측·보강 링크
 pdsa view               # 누적 그래프 메모리를 로컬 포트 뷰어로 시각화
 ```
 

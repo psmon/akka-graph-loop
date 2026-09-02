@@ -109,6 +109,8 @@ From this repo root, pick the usable form. Read `pdsa` in this document as the f
 | `pdsa study "…"` | Report results → learnings & improvement points |
 | `pdsa act [--note "…"]` | Next improvement action (closes the cycle) |
 | `pdsa recall ["<topic>"]` | Re-read past cycle learnings as planning context; `plan` injects it automatically |
+| `pdsa history [--from n] [--to n]` | Timeline of every cycle, **oldest first**: expected → verdict → actual → learning |
+| `pdsa show [<n>]` | One cycle in full: all four phases, metrics, reinforcement links (defaults to the latest) |
 | `pdsa status` / `pdsa view` | Accumulated state / graph viewer |
 | `pdsa update [--check]` | Check for and install the latest version (global npm); `--check` only checks |
 | `pdsa config …` / `pdsa check` / `pdsa models` | LLM key & model setup / connection check / model list |
@@ -127,6 +129,8 @@ parsing is stable (camelCase).
 - `act --json` → `{project, cycle, reinforce, what, narrative, hitRate:{met,total}, cycleCount, llmEnabled}`
 - `status --json` → all cycles/steps, untruncated. `eval --json` → expected/verdict/actual per cycle.
 - `recall ["<topic>"] --json` → `{project, topic, learnings:[{cycle, verdict, expected, actual, study, act}]}`
+- `history --json` → `{project, cycleCount, hitRate, cycles:[…]}` · `show --json` → `{project, cycle, reinforces, reinforcedBy}`
+  (both reuse `status`'s cycle/phase shape, so one parser covers all three)
 
 Recall: use `pdsa recall "<topic>"` to pull related past learnings as context before planning
 (omit the topic for the most recent learnings).

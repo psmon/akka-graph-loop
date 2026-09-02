@@ -24,13 +24,17 @@ public sealed class ActCommand : ICliCommand
         if (cur is null) { Console.Error.WriteLine("진행 중인 사이클이 없습니다. 먼저 `pdsa plan` 으로 시작하세요."); return 3; }
 
         var cid = cur.Value.Id;
-        var plan = s.Workflow.GetPhase(cid, PdsaWorkflow.PlanKind)?.Input ?? "";
+        var planPhase = s.Workflow.GetPhase(cid, PdsaWorkflow.PlanKind);
+        if (planPhase is null) { Console.Error.WriteLine(CycleGuard.OrphanMessage(cid)); return 3; }
+
+        var plan = planPhase.Input;
         var done = s.Workflow.GetPhase(cid, PdsaWorkflow.DoKind)?.Input ?? "";
         var studyPhase = s.Workflow.GetPhase(cid, PdsaWorkflow.StudyKind);
         var study = studyPhase?.Input ?? "";
         var verdict = studyPhase?.Verdict ?? "";
         var note = ArgUtil.Option(args, "--note") ?? "";
 
+        var metrics = new PhaseMetrics(s.Llm);
         var coaching = await Spinner.RunAsync("코칭 중", c => s.Coach.NextActionAsync(plan, done, study, verdict, c), ct);
 
         // 보강 여부: 명시 --reinforce 우선, 없으면 코치 판단.
@@ -41,15 +45,15 @@ public sealed class ActCommand : ICliCommand
         var what = manualWhat ?? coaching.What;
         var reinforceValue = reinforce ? "yes:" + what : "no";
 
-        s.Workflow.RecordPhase(cid, PdsaWorkflow.ActKind, note, coaching.Narrative,
-            new Dictionary<string, string> { ["reinforce"] = reinforceValue });
+        var extra = metrics.Collect(new Dictionary<string, string> { ["reinforce"] = reinforceValue });
+        s.Workflow.RecordPhase(cid, PdsaWorkflow.ActKind, note, coaching.Narrative, extra);
 
         if (ArgUtil.Flag(args, "--json"))
         {
             var (m, t) = s.Workflow.HitRate();
             JsonOut.Write(
                 new ActJson(s.Project, cid, reinforce, what, coaching.Narrative,
-                    new HitRateJson(m, t), s.Workflow.CycleCount(), s.Coach.Enabled),
+                    new HitRateJson(m, t), s.Workflow.CycleCount(), s.Coach.Enabled, MetricsMap.From(extra)),
                 PdsaJson.Default.ActJson);
             return 0;
         }
