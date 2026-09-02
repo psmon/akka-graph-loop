@@ -94,6 +94,8 @@ pdsa act   --note "memo"      # learnings + auto-links a REINFORCE cycle if need
 pdsa status                   # progress + expectation hit-rate (recall)
 pdsa eval                     # per-cycle expected / verdict / actual + hit-rate
 pdsa recall "topic"           # read back prior-cycle learnings (planning context)
+pdsa history                  # every cycle, oldest first: expected -> verdict -> actual -> learning
+pdsa show 7                   # one cycle in full: phases, metrics, reinforcement links
 pdsa view                     # local graph viewer
 ```
 

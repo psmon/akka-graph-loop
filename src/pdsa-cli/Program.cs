@@ -22,6 +22,8 @@ var router = new CommandRouter(new ICliCommand[]
     new StudyCommand(),
     new ActCommand(),
     new StatusCommand(),
+    new HistoryCommand(),
+    new ShowCommand(),
     new EvalCommand(),
     new RecallCommand(),
     new ProjectCommand(),

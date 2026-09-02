@@ -49,6 +49,14 @@ internal sealed record StatusJson(
     string project, string db, bool llmConfigured, int cycleCount, HitRateJson hitRate,
     IReadOnlyList<CycleJson> cycles);
 
+/// <summary>`show` — 한 사이클 전체 + 보강 링크. 사이클 표현은 status 와 동일한 <see cref="CycleJson"/>.</summary>
+internal sealed record ShowJson(
+    string project, CycleJson cycle, long reinforces, IReadOnlyList<long> reinforcedBy);
+
+/// <summary>`history` — 시간순 사이클 목록. 사이클 표현은 status 와 동일해 파서를 재사용할 수 있다.</summary>
+internal sealed record HistoryJson(
+    string project, int cycleCount, HitRateJson hitRate, IReadOnlyList<CycleJson> cycles);
+
 internal sealed record EvalCycleJson(
     long id, string status, string verdict, string expected, string actual, string reinforce);
 
@@ -60,6 +68,18 @@ internal sealed record LearningJson(
 
 internal sealed record RecallJson(
     string project, string? topic, IReadOnlyList<LearningJson> learnings);
+
+/// <summary>
+/// 사이클 뷰 → JSON. status·show·history 가 **같은 매핑**을 쓰므로 명령마다 필드가 어긋날 수 없다.
+/// </summary>
+internal static class CycleMap
+{
+    public static CycleJson From(PdsaCycleView c) =>
+        new(c.Id, c.Status, c.Started, c.Verdict,
+            c.Phases.Select(p => new PhaseJson(
+                p.Kind, p.Input, p.Llm, p.Created, p.Expected, p.Verdict, p.Actual, p.Reinforce,
+                MetricsMap.From(p))).ToList());
+}
 
 /// <summary>계측 딕셔너리/Phase 를 <see cref="MetricsJson"/> 으로 옮긴다(값 없으면 null).</summary>
 internal static class MetricsMap
@@ -100,6 +120,8 @@ internal static class JsonOut
 [JsonSerializable(typeof(StudyJson))]
 [JsonSerializable(typeof(ActJson))]
 [JsonSerializable(typeof(StatusJson))]
+[JsonSerializable(typeof(ShowJson))]
+[JsonSerializable(typeof(HistoryJson))]
 [JsonSerializable(typeof(EvalJson))]
 [JsonSerializable(typeof(RecallJson))]
 internal partial class PdsaJson : JsonSerializerContext;

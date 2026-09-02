@@ -258,12 +258,61 @@ public sealed class PdsaWorkflow : IDisposable
         return rows.Count == 0 ? null : ToPhase(rows[0]);
     }
 
-    /// <summary>최근 사이클들과 각 단계를 요약해 반환(status 출력용).</summary>
-    public IReadOnlyList<PdsaCycleView> Recent(int limit = 5)
+    /// <summary>최근 사이클들과 각 단계를 요약해 반환(status 출력용, 최신순).</summary>
+    public IReadOnlyList<PdsaCycleView> Recent(int limit = 5) => Fetch("", ascending: false, limit);
+
+    /// <summary>사이클 하나를 단계까지 읽는다(show 용). 없으면 null.</summary>
+    public PdsaCycleView? Cycle(long id) =>
+        Fetch("WHERE c.id = $from", ascending: true, limit: 1, from: id, to: id).FirstOrDefault();
+
+    /// <summary>
+    /// 사이클 범위를 읽는다(history 용). <paramref name="from"/>/<paramref name="to"/> 는 0 이면 무제한이고,
+    /// 기본은 <b>오름차순</b>이다 — history 는 "어떻게 여기까지 왔나"를 읽는 용도라
+    /// 최신순인 <see cref="Recent"/>(status)와 정렬 기본값이 반대다.
+    /// </summary>
+    public IReadOnlyList<PdsaCycleView> Range(long from = 0, long to = 0, bool ascending = true, int limit = 0)
     {
-        var cycleRows = _g.Query(
-            "MATCH (c:Cycle) RETURN c.id, c.status, c.started ORDER BY c.id DESC LIMIT $lim", 3,
-            P(("lim", (long)limit)));
+        var where = (from > 0, to > 0) switch
+        {
+            (true, true) => "WHERE c.id >= $from AND c.id <= $to",
+            (true, false) => "WHERE c.id >= $from",
+            (false, true) => "WHERE c.id <= $to",
+            _ => "",
+        };
+        return Fetch(where, ascending, limit, from, to);
+    }
+
+    /// <summary>
+    /// 이 사이클과 연결된 보강(<c>REINFORCES</c>) 관계.
+    /// <c>Reinforces</c> = 이 사이클이 보강하는 원 사이클, <c>ReinforcedBy</c> = 이 사이클을 보강한 사이클들.
+    /// </summary>
+    public (long Reinforces, IReadOnlyList<long> ReinforcedBy) ReinforceLinks(long cycleId)
+    {
+        var target = _g.Query("MATCH (a:Cycle {id: $id})-[:REINFORCES]->(b:Cycle) RETURN b.id", 1, P(("id", cycleId)));
+        var by = _g.Query("MATCH (a:Cycle)-[:REINFORCES]->(b:Cycle {id: $id}) RETURN a.id ORDER BY a.id", 1,
+            P(("id", cycleId)));
+        return (target.Count > 0 ? long.Parse(target[0][0], CultureInfo.InvariantCulture) : 0,
+                by.Select(r => long.Parse(r[0], CultureInfo.InvariantCulture)).ToList());
+    }
+
+    /// <summary>
+    /// 사이클 조회의 <b>단일 경로</b>. <see cref="Recent"/>/<see cref="Cycle"/>/<see cref="Range"/> 가
+    /// 모두 여기를 지나므로 조회 방식 간 데이터 불일치가 생길 수 없다.
+    /// </summary>
+    private List<PdsaCycleView> Fetch(string where, bool ascending, int limit, long from = 0, long to = 0)
+    {
+        var order = ascending ? "ASC" : "DESC";
+        var cypher = $"MATCH (c:Cycle) {where} RETURN c.id, c.status, c.started ORDER BY c.id {order}" +
+                     (limit > 0 ? " LIMIT $lim" : "");
+
+        // 파라미터는 Cypher 에 실제로 등장하는 것만 바인딩한다(미사용 파라미터는 prepare 실패).
+        var ps = new Dictionary<string, object>();
+        if (where.Contains("$from")) ps["from"] = from;
+        if (where.Contains("$to")) ps["to"] = to;
+        if (limit > 0) ps["lim"] = (long)limit;
+
+        var cycleRows = ps.Count > 0 ? _g.Query(cypher, 3, ps) : _g.Query(cypher, 3);
+
         var views = new List<PdsaCycleView>();
         foreach (var c in cycleRows)
         {
