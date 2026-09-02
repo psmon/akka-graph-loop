@@ -53,11 +53,33 @@ pdsa show 21 --full --project akka-graph-loop           # 한 회차의 4단계 
 #4 ← #5      #12 ← #13      #14 ← #15 ← #16      #20 ← #21
 ```
 
+기록을 그대로 읽으면 한 가지가 더 보인다. **Act 가 `reinforce: yes` 를 기록한 회차는 10개인데
+실제 엣지는 5개다.** 이어지지 않은 다섯은 #5–#9 로, 3기의 연속 구간이다. 자동 연결
+(`PendingReinforceTarget`)은 그 시점에 이미 있었으므로 `--fresh` 로 의도적으로 끊었을 가능성이 크지만,
+**`--fresh` 사용 여부는 기록되지 않아 지금은 재구성할 수 없다.** 루프가 자기 기록에서 찾아낸,
+아직 닫히지 않은 관측 공백이다.
+
 ---
 
 # 회차별 기록
 
 각 회차마다 **실제 기록된 Plan → Do → Study → Act**와, 그 회차가 남긴 **배운 것**을 붙였다.
+
+### 읽는 법 — 각 단계가 기록하는 속성
+
+루프의 데이터 모델은 단계마다 다른 속성을 남긴다. 아래 블록에 그 값을 그대로 옮겼다.
+
+| 단계 | 기록되는 속성 | 값이 있는 회차 |
+|---|---|---|
+| **Plan** | 계획 본문 + **기대 평가**(`expected`) — Study 가 판정할 기준 | 22 / 19 |
+| **Do** | 수행 보고 | 21 |
+| **Study** | **판정**(`verdict` = met·partial·unmet) + **실제**(`actual`) — 기대의 짝이 되는 측정값 | 18 |
+| **Act** | 다음 개선 액션 + **보강 판단**(`reinforce` = `yes:무엇을` 또는 `no`) | 18 |
+| 전 단계 | **계측**(지연·시도·모델·토큰) — #21 에서 도입돼 그 이후 회차에만 있다 | 2 |
+
+`기대 평가 → 실제 → 판정`이 한 삼각형을 이룬다. 기대 없이 판정만 보면 "무엇에 대해 partial 인지"를
+알 수 없기 때문에, 이 문서는 세 값을 항상 함께 보여준다. 각 단계의 LLM 코칭 서술(가설·정리·학습)은
+회차당 1,000자가 넘어 여기 싣지 않았다 — `pdsa show <n> --full` 로 원문을 볼 수 있다.
 
 ---
 
@@ -68,6 +90,7 @@ pdsa show 21 --full --project akka-graph-loop           # 한 회차의 4단계 
 ![사이클 1](cards-ko/cycle-01.svg)
 
 - **Plan** — pdsa-cli 기본기능을 검증하고 유닛테스트를 보강한다.
+  - **기대 평가** — *(없음 — `expected` 필드가 도입되기 전)*
 - **Do** — CLI 명령 스모크 실행(`version`/`project`/`check`/`status`), 그래프 기록·조회 확인.
   **테스트 프로젝트가 pdsa-cli를 아예 참조하지 않고 있음을 발견.**
 - **Study** — 판정 없음(이때는 `expected` 필드가 존재하지 않았다).
@@ -82,6 +105,7 @@ pdsa show 21 --full --project akka-graph-loop           # 한 회차의 4단계 
 ![사이클 2](cards-ko/cycle-02.svg)
 
 - **Plan** — Cli/Llm의 순수 로직을 유닛테스트로 커버한다.
+  - **기대 평가** — *(없음 — `expected` 필드가 도입되기 전)*
 - **Do** — 테스트 csproj에 `PdsaCli` 참조 + `InternalsVisibleTo` 추가, `Mask`를 internal로 승격.
   ArgUtil/CommandRouter/PdsaCoach/OpenAiConfig/PdsaProjectPaths 5개 테스트 파일 작성.
 - **Study** — 판정 없음.
@@ -96,6 +120,7 @@ pdsa show 21 --full --project akka-graph-loop           # 한 회차의 4단계 
 ![사이클 3](cards-ko/cycle-03.svg)
 
 - **Plan** — 뷰어 헤더에 활성 프로젝트명·DB를 표시하고(구분 문제), 드롭다운으로 재시작 없이 전환한다(선택 문제). Playwright로 재검증.
+  - **기대 평가** — *(없음 — `expected` 필드가 도입되기 전)*
 - **Do** — Viewer에 `/api/projects`, `/api/graph?project=` 추가, 헤더에 프로젝트명·DB·select 드롭다운, `ViewCommand`/`ViewerLauncher`가 `--project` 전달. 빌드 경고 0.
 - **Study** — 판정 없음.
 - **Act** — 다음: 뷰어 API 통합테스트, 프로젝트 삭제/이름변경 UI 검토.
@@ -113,11 +138,13 @@ pdsa show 21 --full --project akka-graph-loop           # 한 회차의 4단계 
 ![사이클 4](cards-ko/cycle-04.svg)
 
 - **Plan** — Plan 기대평가 · Study LLM 판정(met/partial/unmet) · Act 보강 사이클(REINFORCES) · 재현율 지표를 CLI와 그래프뷰에 구현한다.
+  - **기대 평가** — CLI와 그래프뷰에서 기대평가·판정·보강 이력·재현율이 100% 연결되어 표시되고, 대표 10개 사이클의 판정이 사전 정의 기준과 90% 이상 일치하면 성공.
 - **Do** — `PdsaWorkflow`에 `expected/verdict/actual/reinforce` 컬럼(ALTER 마이그레이션) + REINFORCES 엣지 + HitRate,
   `PdsaCoach` 센티넬 파싱, Plan/Study/Act/Status/Eval 갱신, 뷰어에 판정색·엣지·충족률 뱃지.
-- **Study** — **`partial`.** 테스트 73개 전량 통과, 판정·보강·뱃지 표시와 `partial → 보강 → met` 흐름은 확인됐으나
+- **Study** — 판정 **`partial`** · 실제: 테스트 73개 전량 통과, 판정·보강·뱃지 표시와 `partial → 보강 → met` 흐름은 확인됐으나
   eval 재현율이 1/2(50%)이고 "대표 10개 사이클 90% 이상 일치" 검증은 미완료.
-- **Act** — 기대평가 대비 판정 재현율을 높이도록 Study 입력·판정 기준을 구조화한다. **보강 필요(→ #5).**
+- **Act** — 폐루프 기능 구현·검증은 완료, 판정 안정성 평가는 후속으로 넘긴다. **보강 필요(→ #5).**
+  - **보강 판단** — `yes:` 기대평가 대비 판정 재현율을 높이도록 Study 입력·판정 기준을 구조화한다
 
 > **배운 것 — 한 번의 성공 사례는 판정 기준의 안정성을 보장하지 않는다.**
 > 폐루프가 동작하는 것과 판정이 *신뢰할 만한* 것은 다른 문제다. 이 회차는 자기 기능이 작동함을 보이고도
@@ -134,11 +161,13 @@ pdsa show 21 --full --project akka-graph-loop           # 한 회차의 4단계 
 
 - **Plan** — 키리스 오픈웨이트(ollama/vLLM/LM Studio)와 GPT OAuth 두 방식으로 인증을 확장한다.
   사용자 지시는 "도입 전 플래닝 먼저" — 이번 회차는 **설계만**.
+  - **기대 평가** — 설계 문서가 config 스키마·인증 추상화 경계·기존 API 키의 하위호환 규칙을 명시하고, 키 없는 local/openai-compat 및 OAuth 흐름의 설정 예시와 승인 기준을 포함하면 성공.
 - **Do** — 인증/설정 계층의 모든 호출부를 grep으로 식별(5지점: `LlmOptions`, `OpenAiClient` ctor, `OpenAiConfig`, `ConfigCommand`, 클라이언트 생성 4곳).
   핵심 결정: **`new OpenAiClient(LlmOptions)` 시그니처를 보존**하고 `AuthMode`+`IAuthProvider`를 클라이언트 내부로 밀어넣는다.
-- **Study** — **`partial`.** 설계문서에 config UX·인증 추상화·하위호환 회귀 5종·도입 순서는 확정, 변경지점 5/5(100%) 식별.
+- **Study** — 판정 **`partial`** · 실제: 설계문서에 config UX·인증 추상화·하위호환 회귀 5종·도입 순서는 확정, 변경지점 5/5(100%) 식별.
   단 키리스/OAuth의 구체적 설정 예시와 명시적 승인 기준이 빠졌다.
 - **Act** — 코치 지적을 반영해 설계문서에 실행가능한 JSON 설정 예시 4종과 측정가능한 승인기준 5종을 추가. **보강(#4 이월).**
+  - **보강 판단** — `yes:` 설계의 미해결 쟁점 3개를 구현 가능한 결정으로 확정하고 승인한다
 
 > **배운 것 — 생성자 시그니처 하나를 지키면 확장이 국소화된다.**
 > `OpenAiClient(LlmOptions)`를 보존한다는 결정 하나로 인증 확장 전체가 4개 파일에 갇혔고, 클라이언트를
@@ -150,11 +179,13 @@ pdsa show 21 --full --project akka-graph-loop           # 한 회차의 4단계 
 ![사이클 6](cards-ko/cycle-06.svg)
 
 - **Plan** — `AuthMode(ApiKey|OAuth|None)`와 `IAuthProvider`를 도입하되 기본값 ApiKey로 하위호환을 유지한다.
+  - **기대 평가** — 기존 73개 테스트와 신규 인증 테스트가 모두 통과하고, 기본 ApiKey는 기존 동작 유지, `provider local`은 키 없이 로드되되 원격 endpoint의 무키 사용은 명시적 None 없이는 차단된다.
 - **Do** — `ApiKeyAuth`/`NoAuth`/`OAuthAuth`(스텁) + `AuthProviders.Create` 팩토리 + `IsPrivateEndpoint`
   (loopback/RFC1918/fc00::/.local 판정, **DNS 이름은 원격 취급**). `OpenAiClient`가 요청마다 `GetHeaderAsync`로 헤더 주입.
-- **Study** — **`partial`.** 73→91개 테스트 전량 통과, localhost 키리스 로드와 원격 무키 차단 확인.
+- **Study** — 판정 **`partial`** · 실제: 73→91개 테스트 전량 통과, localhost 키리스 로드와 원격 무키 차단 확인.
   단 계획했던 필드병합 테스트는 미추가이고 OAuth는 스텁 수준.
 - **Act** — Config 경로 주입을 도입해 `repo < global < env` 필드병합 우선순위를 격리 단위테스트로 검증한다. **보강 필요(→ #7).**
+  - **보강 판단** — `yes:` Config 경로 주입을 도입해 `repo<global<env` 병합 우선순위를 격리 단위테스트로 검증한다
 
 > **배운 것 — 키를 없애는 것과 안전하게 없애는 것은 다르다.**
 > 키 검증을 그냥 제거하면 원격 엔드포인트에 무인증으로 붙는 구멍이 열린다. 사설 대역만 자동 허용하고
@@ -166,12 +197,14 @@ pdsa show 21 --full --project akka-graph-loop           # 한 회차의 4단계 
 ![사이클 7](cards-ko/cycle-07.svg)
 
 - **Plan** — 경로 주입 seam + 필드병합 격리테스트 + 실서버 키리스 E2E(`a1.webnori.com`, 키 불필요).
+  - **기대 평가** — 기존 91개 테스트가 모두 통과하고, 신규 필드병합 테스트가 `repo<global<env` 우선순위를 4개 필드별로 검증하며, E2E opt-in 시 check 응답 OK·미설정 시 원격 무인증이 차단되면 성공.
 - **Do** — `OpenAiConfig`에 경로 seam(`PDSA_GLOBAL_CONFIG` env + internal override), 8개 경로 참조를 라우팅.
   필드병합 테스트 9케이스 신규. **중대 사고 발생·원복**: `GetFolderPath`가 `LOCALAPPDATA` 환경변수를 무시해
   테스트가 사용자의 **실제 전역 설정을 오염**시켰다.
-- **Study** — **`partial`.** 100개 테스트·경고 0 통과, opt-in 미설정 시 차단(exit 3)과 opt-in 후 키리스 `check` 성공(1,270ms) 확인.
+- **Study** — 판정 **`partial`** · 실제: 100개 테스트·경고 0 통과, opt-in 미설정 시 차단(exit 3)과 opt-in 후 키리스 `check` 성공(1,270ms) 확인.
   단 기대평가가 지정한 4개 필드와 실제 검증 필드가 달랐다.
 - **Act** — `allow_insecure_no_auth`의 global-only 정책을 repo/env 무시까지 자동테스트로 고정. **보강(#6 이월).**
+  - **보강 판단** — `yes:` `allow_insecure_no_auth`의 global-only 보안 정책을 repo/env 무시까지 자동테스트로 고정
 
 > **배운 것 — 통합 테스트 전에 경로 주입 seam이 먼저다.**
 > 정적 OS 경로를 직접 참조한 채로 E2E를 시도하면 테스트가 사용자의 실제 설정을 덮어쓴다. 실제로 일어났고
@@ -183,11 +216,13 @@ pdsa show 21 --full --project akka-graph-loop           # 한 회차의 4단계 
 ![사이클 8](cards-ko/cycle-08.svg)
 
 - **Plan** — 토큰 라이프사이클 코어(`OAuthToken`/`ITokenRefresher`), 만료→refresh→Bearer→persist, device-code 로그인 흐름을 실구현한다.
+  - **기대 평가** — 기존 102개 테스트와 신규 OAuth 코어·config·device-code 폴링 테스트가 모두 통과하고 경고 0개이며, 만료/유효 토큰·persist·ApiKey/None 무영향·pending/slow_down/성공 전이를 테스트로 재현하면 성공.
 - **Do** — `HttpTokenRefresher`(`HttpMessageHandler` 주입), device-code 폴링 상태머신(`delay`·`now` 주입),
   `OAuthAuth` 스텁→실동작(만료 skew 30s), `config oauth`/`config login`.
-- **Study** — **`met`.** 102→129개 테스트 전량 통과·경고 0. 토큰 갱신·persist·ApiKey/None 무영향,
+- **Study** — 판정 **`met`** · 실제: 102→129개 테스트 전량 통과·경고 0. 토큰 갱신·persist·ApiKey/None 무영향,
   device-code의 `pending`/`slow_down`/성공 전이, `refresh_token` 비노출까지 테스트로 검증.
 - **Act** — 3방식 인증(ApiKey/키리스/OAuth) 확장 완료. 미검증은 실 OAuth 프로바이더 E2E와 `refresh_token_file` 원자적 쓰기.
+  - **보강 판단** — `yes:` `refresh_token_file` 저장을 원자적 쓰기와 소유자 전용 권한으로 보강
 
 > **배운 것 — 시간과 네트워크를 주입하면 OAuth도 결정적 단위테스트가 된다.**
 > 리프레셔·HTTP 전송·시계(`Func<long>`)를 전부 주입 가능하게 만들자, 만료·갱신·폴링 같은 "기다려야 아는"
@@ -203,12 +238,14 @@ pdsa show 21 --full --project akka-graph-loop           # 한 회차의 4단계 
 ![사이클 9](cards-ko/cycle-09.svg)
 
 - **Plan** — 실행한 워크스페이스에 PDSA 스킬(`.claude/skills/pdsa/SKILL.md`)을 설치하는 `pdsa init`을 만든다. AOT 임베디드 리소스 사용.
+  - **기대 평가** — AOT publish 산출물에서 `pdsa init --lang en|ko --yes`가 각각 유효한 `SKILL.md`를 생성하고, 기존 102+ 테스트와 신규 리소스·경로·덮어쓰기 테스트가 모두 통과하며 빌드 경고 0건.
 - **Do** — **핵심 함정 발견**: MSBuild `AssignCulture`가 파일명의 `.en`/`.ko`를 문화권으로 오인해 리소스를
   위성 어셈블리로 분리했고(둘 다 `PdsaCli.Resources.SKILL.md`로 충돌), **메인 dll에 리소스가 0개**였다.
   `WithCulture=false` + 명시적 `LogicalName`으로 문화권 추론을 꺼서 해결.
-- **Study** — **`partial`.** 129→141개 테스트, 신규 12개, 실 CLI 생성/보호/강제덮어쓰기 E2E, 경고 0 달성.
+- **Study** — 판정 **`partial`** · 실제: 129→141개 테스트, 신규 12개, 실 CLI 생성/보호/강제덮어쓰기 E2E, 경고 0 달성.
   단 AOT 네이티브 exe에서의 실제 `init` 실행 검증은 링크 환경 문제로 미완.
 - **Act** — 정상 링크 환경 또는 CI에서 네이티브 exe로 `init`을 실제 실행해 검증한다.
+  - **보강 판단** — `yes:` 정상 링크 환경 또는 CI에서 AOT 네이티브 exe로 `pdsa init`을 실제 실행해 검증
 
 > **배운 것 — 빌드가 성공해도 리소스는 사라질 수 있다.**
 > `--getItem` 결과만 보면 임베드가 된 것처럼 보였지만 실제 매니페스트에는 아무것도 없었다. 결정적 검증은
@@ -220,11 +257,13 @@ pdsa show 21 --full --project akka-graph-loop           # 한 회차의 4단계 
 ![사이클 10](cards-ko/cycle-10.svg)
 
 - **Plan** — 언어 결정 우선순위 `--lang > PDSA_LANG > config > OS 로케일 > en`을 구현하고, 도움말과 코치 프롬프트를 ko/en으로 분기한다.
+  - **기대 평가** — 기존 141개 테스트와 신규 i18n 우선순위·한국어 감지·프롬프트 언어·도움말 분기 테스트가 모두 통과하고 경고 0개이며, `--lang > PDSA_LANG > config > OS 로케일 > en` 순서가 각 격리 시나리오에서 재현되면 성공.
 - **Do** — 순수 함수 `PdsaLang.Resolve` + OS 감지(env `LANG`/`LC_ALL`/… + Windows `GetUserDefaultUILanguage` P/Invoke).
   `InvariantGlobalization=true`라 `CultureInfo`를 못 쓰고, `LibraryImport`가 unsafe를 요구해 `DllImport`로 교체(AOT-safe).
-- **Study** — **`met`.** 141→163개 테스트 전량 통과·경고 0. 우선순위 5단계가 각 격리 시나리오에서 재현되고
+- **Study** — 판정 **`met`** · 실제: 141→163개 테스트 전량 통과·경고 0. 우선순위 5단계가 각 격리 시나리오에서 재현되고
   실 CLI에서도 한글 OS 로케일 자동 감지가 확인됐다.
 - **Act** — 명령별 usage 전면 i18n, Windows 로케일 감지 통합테스트는 후속. **보강 불필요.**
+  - **보강 판단** — `no`
 
 > **배운 것 — 제약이 있어도 우회로는 있고, 순수 함수로 빼면 검증이 쉬워진다.**
 > AOT를 위해 `InvariantGlobalization=true`를 켠 대가로 표준 로케일 API를 잃었지만, 환경변수와 P/Invoke
@@ -241,9 +280,11 @@ pdsa show 21 --full --project akka-graph-loop           # 한 회차의 4단계 
 
 - **Plan** — Codex 구독 사용자가 공식 `codex login` 산출물을 재사용해 pdsa를 쓰게 한다.
   토큰 소스·갱신 엔드포인트·`account_id` 추출·`/responses` SSE까지 메커니즘을 파악해 기록.
+  - **기대 평가** — 기존 163개 테스트와 신규 Codex 단위 테스트가 모두 통과하고 경고 0건이며, 사용자가 실제 `auth.json`으로 로그인·갱신·SSE 응답을 1회 이상 확인하면 성공.
 - **Do** — *(기록 없음)*
 - **Study** — *(기록 없음)*
 - **Act** — *(기록 없음)*
+- **사이클 상태** — `planned` — 22회 중 유일하게 `acted` 가 아닌 값. 중도 포기의 기계 판독 증거다.
 
 > **배운 것 — 루프는 자기 미결을 지우지 않는다.**
 > 22회 중 유일하게 중도에 버려진 회차다. 계획만 있고 Study가 없어 판정도 없다. 이 빈칸은 데이터 결손이 아니라
@@ -256,10 +297,12 @@ pdsa show 21 --full --project akka-graph-loop           # 한 회차의 4단계 
 
 - **Plan** — Claude Code 같은 에이전트가 **공식 기능**으로 자기 모델을 쓰게 하는 경로(MCP sampling / `claude -p` / Agent SDK)를 조사한다.
   프롬프트 주입 편법은 지양. **이번 세션은 구현 없이 자료조사만**, `docs/`에 설계·조사 문서를 남긴다.
+  - **기대 평가** — `docs/`에 공식 연동 경로별 지원 여부·인증 방식·입출력 제약·구현 난이도·근거 URL을 담은 설계 문서 1개 이상과 비교표 1개 이상이 있고, 채택 후보 1개를 명시적으로 판정할 수 있으면 성공.
 - **Do** — Codex(GPT 구독) OAuth 모드를 **구현**했다. `Codex.cs`(auth.json 재사용+JWT+refresh 재기록),
   `CodexClient`(Responses SSE), `AuthMode.Codex`, `config auth codex`. 163→175개 테스트 통과.
-- **Study** — **`unmet`.** 구현·테스트·설정 스모크는 확인됐지만, **기대한 `docs/` 설계 문서·비교표·근거 URL·채택 후보 판정이 없었다.**
+- **Study** — 판정 **`unmet`** · 실제: 구현·테스트·설정 스모크는 확인됐지만, **기대한 `docs/` 설계 문서·비교표·근거 URL·채택 후보 판정이 없었다.**
 - **Act** — Codex 로그인 사용자가 실제 E2E 1회를 수행해 토큰 갱신과 `/responses` SSE를 검증한다. **보강 필요(→ #13).**
+  - **보강 판단** — `yes:` Codex 로그인 사용자가 실제 E2E 1회로 토큰 갱신·`/responses` SSE를 검증하고 실패 증적을 수집
 
 > **배운 것 — 좋은 작업도 계획과 다르면 실패다.**
 > 이 회차는 실제로 쓸모 있는 기능(Codex 프로바이더)을 만들었고 테스트도 12개 늘렸다. 그런데도 판정은
@@ -271,10 +314,12 @@ pdsa show 21 --full --project akka-graph-loop           # 한 회차의 4단계 
 ![사이클 13](cards-ko/cycle-13.svg)
 
 - **Plan** — #12가 못 낸 산출물을 낸다. `docs/`에 조사문서 + 설계문서를 쓰고 채택 후보를 판정한다.
+  - **기대 평가** — 조사문서와 설계문서가 `docs/`에 작성되고, 최소 3개 LLM 프로바이더를 비용·모델성능·API/Claude Code 호환성·보안 기준으로 비교해 채택/보류/제외 판정이 명시되면 성공.
 - **Do** — 병렬 서브에이전트 2개로 (a) pdsa LLM 프로바이더 아키텍처 맵, (b) Claude Code 공식 메커니즘 조사를 동시 수행.
   `claude-code-self-llm-조사.md`(4후보 비교표+근거 URL)와 `claude-code-provider-설계.md`(삽입점 6곳+팩토리 우회 함정+미결 5건) 작성.
-- **Study** — **`met`.** 4개 후보를 비용·성능·연동·AOT·안정성·즉시 실현성으로 비교해 **D 조건부채택(ToS 선결), B 폴백, A 기각, C 비권장**으로 명시.
+- **Study** — 판정 **`met`** · 실제: 4개 후보를 비용·성능·연동·AOT·안정성·즉시 실현성으로 비교해 **D 조건부채택(ToS 선결), B 폴백, A 기각, C 비권장**으로 명시.
 - **Act** — 조사·설계 완료, **구현 없음(plan-first 원칙)**. 보강 불필요.
+  - **보강 판단** — `no`
 
 > **배운 것 — 산출물이 문서인 회차는 문서가 기대 평가여야 한다.**
 > #12의 실패는 게으름이 아니라 **기대 평가와 실제 작업의 어긋남**이었다. 같은 주제를 문서를 기대 평가로 걸고
@@ -286,10 +331,12 @@ pdsa show 21 --full --project akka-graph-loop           # 한 회차의 4단계 
 ![사이클 14](cards-ko/cycle-14.svg)
 
 - **Plan** — 설계의 폴백 P2(`claude -p`)를 사용자 지시로 정식 채택·구현한다(공식·무키·ToS 우회 없음).
+  - **기대 평가** — 기존 175개 테스트와 신규 ClaudeCli 단위테스트가 모두 통과하고 경고 0건이며, `config auth claude-cli` 설정 후 최소 1회 실제 `claude -p` 호출에서 성공 `result`를 받고 PDSA 태그를 정확히 추출하면 성공.
 - **Do** — `ClaudeCli.cs`(실행파일 해석: env > config > PATH), `ClaudeCliClient.cs`(`claude -p --output-format json
   --max-turns 1 --append-system-prompt`, `ArgumentList`로 무이스케이프 전달), `AuthMode.ClaudeCli`, 팩토리/Guide 라우팅.
-- **Study** — **`met`.** 175→189개 테스트 전량 통과·경고 0. 실제 `claude -p` 왕복(**7,411ms**)에서 `result=OK` 수신, PDSA 태그 추출 검증.
+- **Study** — 판정 **`met`** · 실제: 175→189개 테스트 전량 통과·경고 0. 실제 `claude -p` 왕복(**7,411ms**)에서 `result=OK` 수신, PDSA 태그 추출 검증.
 - **Act** — 완전 검증(무키·무과금). **보강 필요(→ #15): CLI 시작 지연 약 7.4초에 대한 사용자 피드백/타임아웃.**
+  - **보강 판단** — `yes:` Claude CLI 시작지연(약 7.4초)에 대한 사용자 피드백·타임아웃 정책을 즉시 보강
 
 > **배운 것 — 공식 경로가 있으면 편법이 필요 없다.**
 > "에이전트가 자기 모델을 쓰게 한다"는 요구는 프롬프트 주입 같은 편법을 부르기 쉽다. 공식 헤드리스 CLI를
@@ -306,11 +353,13 @@ pdsa show 21 --full --project akka-graph-loop           # 한 회차의 4단계 
 
 - **Plan** — `--project`를 주면 전역 `project set` 상태에 의존하지 않고 독립 실행되게 한다.
   **현재 `ArgUtil.Positional`이 옵션 '값'까지 본문에 합쳐 기록을 오염시켜 이 기능이 실제로는 깨져 있다.**
+  - **기대 평가** — 서로 다른 2개 프로젝트에서 `--project`로 plan/do/study/act를 동시 실행했을 때 각 기록 본문에 옵션값이 포함되지 않고, 모든 레코드가 지정 프로젝트 DB에만 저장되며 테스트가 100% 통과하면 성공.
 - **Do** — `ArgUtil`에 값-옵션 화이트리스트(`--expect`/`--project`/`--note` 등 11개) 추가, `Positional`이 값 토큰을
   건너뛰도록 재작성(plan/do/study/guide 일괄 해결) + 경계 유닛테스트 3종.
-- **Study** — **`partial`.** 두 프로젝트 `plan --project` 동시 실행에서 본문 오염 0회, DB 분리, 191개 테스트 통과.
+- **Study** — 판정 **`partial`** · 실제: 두 프로젝트 `plan --project` 동시 실행에서 본문 오염 0회, DB 분리, 191개 테스트 통과.
   단 **do/study/act까지 포함한 전체 체인 동시 실행은 실증하지 않았다.**
 - **Act** — 전체 체인을 두 프로젝트에서 실제 병렬 실행해 종단간 검증한다. **보강 필요(→ #16).**
+  - **보강 판단** — `yes:` p/d/s/a 전체 체인을 서로 다른 두 프로젝트에서 실제 병렬 실행해 종단간 검증
 
 > **배운 것 — 기능이 "있다"와 "동작한다"는 다르다.**
 > `--project`는 이전부터 파싱은 되고 있었지만, 그 값이 기록 본문으로 새어 들어가 사실상 못 쓰는 상태였다.
@@ -322,10 +371,12 @@ pdsa show 21 --full --project akka-graph-loop           # 한 회차의 4단계 
 ![사이클 16](cards-ko/cycle-16.svg)
 
 - **Plan** — #15의 미시연 갭(전체 p/d/s/a 체인 동시 실행 E2E)을 실측으로 닫는다.
+  - **기대 평가** — 두 프로젝트에서 `--project` 동시 E2E 실행 후 4단계 기록이 모두 생성되고, 모든 기록에 프로젝트명 옵션값이 노출되지 않으며 각 기록이 해당 프로젝트 DB에만 저장된 것을 grep과 DB 조회로 100% 확인.
 - **Do** — 폐기용 프로젝트 2개(`zz-fc-a`, `zz-fc-b`)에 plan→do→study→act 전체 체인을 `--project`로 **동시 실행**
   (bash 백그라운드 + wait), 각 프로젝트 status의 phase 라인을 grep해 프로젝트명 토큰 출현을 확인, 이후 정리.
-- **Study** — **`met`.** 4단계 기록이 모두 생성됐고, **8개 phase 입력의 자기·상대 프로젝트명 grep 결과가 모두 0회**, 병렬 충돌 0건.
+- **Study** — 판정 **`met`** · 실제: 4단계 기록이 모두 생성됐고, **8개 phase 입력의 자기·상대 프로젝트명 grep 결과가 모두 0회**, 병렬 충돌 0건.
 - **Act** — 완료. 향후 grep 대신 Kùzu 직접 조회로 자동 단언하면 회귀 방어가 더 견고. 보강 불필요.
+  - **보강 판단** — `no`
 
 > **배운 것 — 보강 사이클은 "다시 하기"가 아니라 "증명하기"다.**
 > #15는 코드를 다 고쳤고 논리적으로도 옳았다. #16이 추가로 한 일은 **오직 실증**이다. 이것이
@@ -338,10 +389,12 @@ pdsa show 21 --full --project akka-graph-loop           # 한 회차의 4단계 
 
 - **Plan** — `pdsa view`가 별도 Viewer exe를 띄우는 탓에 AOT 설치본에서 "뷰어를 찾지 못했습니다"로 실패한다.
   `HttpListener`로 CLI 내부에서 인프로세스 서빙하도록 바꾼다.
+  - **기대 평가** — AOT 단일 실행파일에서 `view` 실행 시 별도 Viewer exe 없이 localhost 서버가 기동되고 `/`, `/api/projects`, `/api/graph`가 모두 200 및 camelCase JSON 계약으로 응답하며 전체 테스트가 통과하면 성공.
 - **Do** — `ViewerHtml`을 Core로 이동해 독립 Viewer와 공유, CLI에 `ViewerServer.cs` 신설(`/`, `/api/projects`, `/api/graph`),
   JSON은 STJ 소스젠 컨텍스트로 AOT-안전 직렬화.
-- **Study** — **`met`.** AOT 단일 `pdsa.exe`(40MB)에서 별도 dll 없이 서버가 기동, 3개 라우트 모두 200 + camelCase 계약 충족, 194개 테스트 통과.
+- **Study** — 판정 **`met`** · 실제: AOT 단일 `pdsa.exe`(40MB)에서 별도 dll 없이 서버가 기동, 3개 라우트 모두 200 + camelCase 계약 충족, 194개 테스트 통과.
 - **Act** — 완료. CI에서 3개 OS AOT 산출물에 대한 view 스모크 자동화는 후속. 보강 불필요.
+  - **보강 판단** — `no`
 
 > **배운 것 — 단일 파일 배포는 "프로세스를 하나 더 띄운다"는 가정을 깬다.**
 > 개발 트리에서는 완벽히 동작하던 기능이 설치본에서만 실패했다. AOT 단일 실행파일을 배포 형태로 고른 순간
@@ -354,11 +407,13 @@ pdsa show 21 --full --project akka-graph-loop           # 한 회차의 4단계 
 
 - **Plan** — #14에서 이월된 문제: `claude -p` 왕복이 7.4초로 느린데 타임아웃이 없어 hang 위험이 있고, 대기 중 정지처럼 보인다.
   설정 가능한 타임아웃(env > config > 180s)과 대화형 스피너를 추가한다.
+  - **기대 평가** — 설정 우선순위(env > config > 180s)가 테스트로 검증되고, 타임아웃 시 프로세스가 종료되며, 대화형 터미널에서는 스피너가 표시되고 리다이렉트 stdout에는 스피너 출력이 0건이어야 한다.
 - **Do** — `ResolveTimeout()` + 순수 `ParseTimeout`, 링크드 CTS로 감싸 내부 발화 시에만 `TimeoutException`(조정 안내 포함),
   취소 시 `Kill(entireProcessTree)`. 신규 `Cli/Spinner.cs`를 코칭 호출 6곳에 래핑(stderr 출력, 리다이렉트 시 무동작).
-- **Study** — **`met`.** 우선순위를 Theory 5케이스와 E2E(env=1s가 config=90s를 오버라이드)로 확인,
+- **Study** — 판정 **`met`** · 실제: 우선순위를 Theory 5케이스와 E2E(env=1s가 config=90s를 오버라이드)로 확인,
   **1,175ms 타임아웃·프로세스 kill·안내 메시지**, TTY 스피너 및 **리다이렉트 stdout 제어문자 0건** 검증.
 - **Act** — 이월 항목 마감. 보강 불필요.
+  - **보강 판단** — `no`
 
 > **배운 것 — 대기 경험도 정확성만큼 검증 대상이다.**
 > "느리다"는 #14의 관찰이 네 회차 뒤 구체적인 계획이 됐다. 그리고 스피너를 넣을 때 함께 검증한 것이
@@ -375,12 +430,14 @@ pdsa show 21 --full --project akka-graph-loop           # 한 회차의 4단계 
 
 - **Plan** — (1) 7개 명령에 `--json` 옵트인 구조화 출력, (2) `pdsa recall`과 `RecentLearnings`로 과거 학습을
   `plan` 코칭에 자동 주입, (3) `status/eval --full` 절삭 해제. plan-first 규칙대로 설계 확정 후 구현.
+  - **기대 평가** — 7개 명령의 `--json` 출력이 camelCase 스키마·AOT STJ 소스젠 직렬화로 검증되고, `recall` 학습이 `plan` 코칭에 자동 반영되며, `status/eval --full`이 절삭 없이 출력되고 전체 테스트가 통과하면 성공.
 - **Do** — `PdsaJson` STJ 소스젠(camelCase) + DTO 신설, 6개 명령에 `--json` 분기(**프로즈 출력 불변**),
   `PdsaCoach.HypothesisAsync`에 `priorLearnings` 인자와 `[과거학습]` 블록 주입, `PlanCommand`가 K=3 수집(`--no-recall`),
   `RecallCommand` 신설.
-- **Study** — **`met`.** 7개 명령의 `--json`이 모두 유효 camelCase JSON, recall→plan 자동 주입 확인,
+- **Study** — 판정 **`met`** · 실제: 7개 명령의 `--json`이 모두 유효 camelCase JSON, recall→plan 자동 주입 확인,
   `--full` 무절삭, 204→213개 테스트 통과 및 **프로즈 회귀 없음**.
 - **Act** — 커밋·푸시 완료. 후속 백로그: JSON 스키마 버전 필드, 주입 건수 메타 노출, 세만틱 recall. 보강 불필요.
+  - **보강 판단** — `no`
 
 > **배운 것 — 여기서 그래프가 보관소를 넘어 입력이 됐다.**
 > `--json`은 에이전트가 한국어 프로즈를 정규식으로 긁지 않게 만든 계약이고, `recall`은 그보다 큰 변화였다.
@@ -397,11 +454,13 @@ pdsa show 21 --full --project akka-graph-loop           # 한 회차의 4단계 
 
 - **Plan** — Akka.NET Streams의 미사용 스펙과 주변 스택(OpenTelemetry, Polly 등)을 조사해 도입 실익이 있는 후보를
   안전성·효율성·도입비용·도입후체크 4관점으로 선별한다.
+  - **기대 평가** — 조사 대상 기술 100%에 대해 코드 사용 여부의 근거, 4관점 평가, 검증 방법, now/next/later/reject 판정이 담긴 `docs/` 문서가 작성되고 최소 1개 now 후보의 성공 지표가 정량적으로 정의되면 성공.
 - **Do** — 코드베이스 실측 + 실패 주입 + API 존재검증 3축. **`IPdsaEngine` 참조가 `RunCommand.cs:13` 단 1곳** —
   즉 Akka.Streams는 데모에만 쓰이고 실제 명령 경로는 순수 동기 Kùzu 호출임을 발견. 트랜잭션 0건, 고아 정리 0건,
   재시도 0건. nuget XML 검색으로 **`RetryFlow`가 Akka.NET에 0건(부재)** 확인. 실패 주입으로 고아 사이클 재현(2/2).
-- **Study** — **`met`.** 20개 후보 100%에 근거·4관점 평가·검증방법·now/next/later/reject 판정을 기록하고 now 후보의 정량 지표 5개를 정의.
+- **Study** — 판정 **`met`** · 실제: 20개 후보 100%에 근거·4관점 평가·검증방법·now/next/later/reject 판정을 기록하고 now 후보의 정량 지표 5개를 정의.
 - **Act** — 실측 기준선(고아율 100%, 콜드스타트, 바이너리 52MB)을 다음 사이클의 회귀 비교 기준으로 남긴다. **보강 필요(→ #21).**
+  - **보강 판단** — `yes:` LLM 성공 결과를 검증한 뒤에만 사이클을 생성하도록 PlanCommand의 쓰기 순서를 원자화한다
 
 > **배운 것 — 간판 기술이 실제로 어디서 도는지 확인해야 한다.**
 > 이 저장소의 이름이자 간판인 Akka.Streams 피드백 사이클은 **데모에서만** 돌고 있었다. 그래서 "Akka 스펙을 더
@@ -413,13 +472,16 @@ pdsa show 21 --full --project akka-graph-loop           # 한 회차의 4단계 
 ![사이클 21](cards-ko/cycle-21.svg)
 
 - **Plan** — #20의 now 3건을 **의존성 추가 0**으로 구현한다. N1 원자성(고아 사이클 차단), N3 제한적 재시도, N2 단계별 계측.
+  - **기대 평가** — 실패 주입 20회에서 Plan 없는 고아 Cycle이 0건이고, 재시도 대상 오류는 최대 2회만 재시도되며, 신규 사이클의 Study 입력에 latencyMs·attempts·토큰이 포함되고 테스트·콜드스타트·바이너리 크기에 회귀가 없으면 성공.
 - **Do** — `KuzuGraph.BeginTransaction`을 만들기 전에 **C API에서 실제 동작하는지 테스트 4개로 먼저 확인**(통과 → 준비했던 보상삭제 폴백 불필요).
   `StartCycleWithPlan`으로 Cycle+엣지+Plan Phase를 한 트랜잭션에 묶고, Do/Study/Act에 Plan 없는 사이클 거부 가드 추가.
   `RetryPolicy`(429/5xx/소켓/타임아웃만, 4xx·취소는 즉시 전파, `check`는 재시도 0).
   계측 5컬럼을 기존 ALTER 마이그레이션 패턴으로 추가하고 `ILlmClient` 시그니처는 건드리지 않은 채 선택적 `ILlmUsageReporter`로 수집.
-- **Study** — **`met`.** 실패 주입 20회에 **고아 0건**(기준선 100%), 재시도 정책 17개 테스트로 고정,
+- **Study** — 판정 **`met`** · 실제: 실패 주입 20회에 **고아 0건**(기준선 100%), 재시도 정책 17개 테스트로 고정,
   실제 사이클에 `latencyMs`·`attempts`·토큰 기록 및 Study 주입 확인, 259개 테스트·AOT 39MB·콜드스타트 회귀 없음.
 - **Act** — PR #4 생성. 이 회차의 Study 코칭이 **자기 자신의 계측치를 판정 근거로 인용**해 되먹임이 실증됐다. 보강 불필요.
+  - **보강 판단** — `no`
+- **계측** — do 22,179ms · study 11,063ms · act 4,175ms (토큰 합계 5,448/2,435)
 
 > **배운 것 — 개별 수정보다 순서가 중요하다.**
 > 자연스러운 순서는 "재시도부터"였지만 그것이 정확히 틀린 순서였다. 재시도는 실패 시도를 늘리는데, 실패
@@ -433,12 +495,15 @@ pdsa show 21 --full --project akka-graph-loop           # 한 회차의 4단계 
 
 - **Plan** — 회차별 조회가 없다. `status`(최근순 덤프)/`eval`/`recall`뿐이라 특정 회차 지정도, 시간순 서사도,
   범위 지정도 불가하고 REINFORCES는 뷰어에서만 읽힌다. `show`와 `history`를 추가한다.
+  - **기대 평가** — 21회 누적 실DB에서 `show`·`history`가 각 회차의 기대→판정→실제→배운점·계측·REINFORCES를 정확히 반환하고, 범위·정렬·JSON·구 스키마 호환·전체 테스트가 통과하며 CLI 출력만으로 전 회차 서사를 작성할 수 있으면 성공.
 - **Do** — Core에 `Cycle(id)`/`Range(from,to,asc,limit)`/`ReinforceLinks(id)` 추가, **private `Fetch()`를 단일 조회 경로**로
   만들어 `Recent()`를 그 위에 재구현 — 명령별로 다른 쿼리가 없으니 값이 어긋날 수 없고, 세 API가 같은 사이클에
   동일한 값을 내는지 검증하는 구조 테스트를 넣었다. `CycleMap`으로 status/show/history의 JSON 매핑을 통합.
-- **Study** — **`met`.** 21회 실DB에서 정확한 반환 확인, 양방향 REINFORCES 표시, 경계값(없는 회차 exit 3, from>to exit 2 등),
+- **Study** — 판정 **`met`** · 실제: 21회 실DB에서 정확한 반환 확인, 양방향 REINFORCES 표시, 경계값(없는 회차 exit 3, from>to exit 2 등),
   구 스키마 호환, 271개 테스트 통과. **그리고 이 문서의 서사를 CLI 출력만으로 추출 — 내부 JSON 직접 파싱 0회(기준선 1회).**
 - **Act** — 커밋·PR 반영. 이 기능으로 추출한 서사로 지금 읽고 있는 문서를 작성. 보강 불필요.
+  - **보강 판단** — `no`
+- **계측** — plan 6,659ms · do 19,233ms · study 9,003ms · act 4,990ms (토큰 합계 6,592/2,482)
 
 > **배운 것 — 도구를 쓰는 행위가 도구의 결함을 드러낸다.**
 > 이 조회 기능은 설계 리뷰에서 나온 것이 아니다. **바로 이 문서를 쓰려다** 그래프를 손으로 파싱해야 한다는 것을
