@@ -273,3 +273,10 @@ tests/AkkaGraphLoop.Tests/  # xUnit + Akka TestKit
 - **[PDSA — History, Theory, and the Quality Legacy](PDSA.md)** — why this project is built on PDSA: Shewhart
   → Deming → Japan's quality rise (Toyota, Nintendo) → the West re-learning quality, and **PDCA vs. PDSA**.
   Fact-checked. (한국어: [PDSA-ko.md](PDSA-ko.md))
+
+- **[The self-improving loop — 22 PDSA cycles on this project](docs/pdsa-self-loop/README.md)** — this repo's
+  own PDSA journey, told as a development story. 22 cycles since 2026-08-26 ran through the `pdsa` CLI's own
+  loop, and the write-up is assembled from that graph memory cross-referenced with the git log: the hit
+  rate climbing 40% → 88%, the one `unmet`, the one abandoned cycle whose code shipped anyway, a hero card per
+  cycle, and the whole graph (108 nodes, 133 edges) drawn as a constellation.
+  (한국어: [README-ko.md](docs/pdsa-self-loop/README-ko.md))

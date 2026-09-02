@@ -2,9 +2,9 @@
 
 **English · [한국어](README-ko.md)**
 
-This project did not just *build* a PDSA tool. It was **built by one** — every change since
-2026-08-26 went through the `pdsa` CLI's own Plan → Do → Study → Act loop, and every step is still
-in the graph.
+This project did not just *build* a PDSA tool. It was **built by one** — 22 cycles since 2026-08-26 ran
+through the `pdsa` CLI's own Plan → Do → Study → Act loop, and every step is still in the graph.
+(Not every commit rode a cycle; which ones did not, and why, is its own chapter below.)
 
 The Plan/Do/Study/Act text below is the **actual recorded content**, condensed for reading and
 translated from the Korean original. The raw record is always available from the loop's own memory:
