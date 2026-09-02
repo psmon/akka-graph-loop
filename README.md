@@ -68,6 +68,23 @@ Kùzu), shared by the samples, the viewer, and the CLI.
 
 ### Closed-loop cycle (expected → verdict → reinforce)
 
+```mermaid
+flowchart LR
+    P["Plan<br/>pdsa plan<br/>sets EXPECTED evaluation"]
+    D["Do<br/>pdsa do<br/>organizes Plan→Do"]
+    S["Study<br/>pdsa study<br/>verdict: met / partial / unmet"]
+    A["Act<br/>pdsa act<br/>learnings + next action"]
+    G[("Kùzu graph memory<br/>per project")]
+
+    P --> D --> S --> A
+    A -->|"REINFORCES → next cycle"| P
+    P -.->|records| G
+    D -.->|records| G
+    S -.->|records| G
+    A -.->|records| G
+    G -.->|"recall: auto-injected into Plan"| P
+```
+
 ```bash
 pdsa project set my-repo      # pick a project (per-project graph DB)
 pdsa plan  "what & why & how" # sets a verifiable EXPECTED evaluation → starts a cycle

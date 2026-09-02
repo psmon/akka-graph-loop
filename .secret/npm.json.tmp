@@ -1,0 +1,4 @@
+{
+  "_template": "npm 배포용 시크릿 템플릿입니다. 이 파일을 같은 폴더의 npm.json 으로 복사한 뒤 api_key 를 실제 npm 토큰으로 채우세요. 실제 키 파일(.secret/*.json)은 .gitignore 로 커밋에서 제외됩니다. 이 .tmp 템플릿만 저장소에 커밋됩니다.",
+  "api_key": "npm-여기에-실제-npm-토큰-입력"
+}

@@ -220,6 +220,23 @@ dotnet run --project src/AkkaGraphLoop.Viewer
 
 ### PDSA 워크플로 (한 사이클)
 
+```mermaid
+flowchart LR
+    P["Plan<br/>pdsa plan<br/>검증 가능한 기대 평가 설정"]
+    D["Do<br/>pdsa do<br/>Plan→Do 정리"]
+    S["Study<br/>pdsa study<br/>판정: met / partial / unmet"]
+    A["Act<br/>pdsa act<br/>학습 + 다음 개선 액션"]
+    G[("Kùzu 그래프 메모리<br/>프로젝트별")]
+
+    P --> D --> S --> A
+    A -->|"REINFORCES → 다음 사이클"| P
+    P -.->|기록| G
+    D -.->|기록| G
+    S -.->|기록| G
+    A -.->|기록| G
+    G -.->|"recall: Plan 코칭에 자동 주입"| P
+```
+
 ```bash
 pdsa config key <키>   # 최초 1회: 키 설정(또는 key-file <파일>). 모델은 pdsa config model <모델>
 pdsa check              # LLM 호출 확인

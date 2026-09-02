@@ -9,87 +9,127 @@ description: >-
   "회고", "개선 사이클", "plan do study act", "가설 세워", "다음 개선점".
 ---
 
-# PDSA 지속개선 사이클 (pdsa CLI)
+# PDSA Continuous-Improvement Cycle (`pdsa` CLI)
 
-데밍의 PDSA(Plan → Do → Study → Act) 루프로 작업을 수행하고, 각 단계를 **프로젝트별 그래프 DB(Kùzu)** 에
-누적한다. 반복할수록 그 프로젝트의 학습이 쌓여 "AI 에이전트를 위한 장기 메모리"가 된다.
+Run work through Deming's PDSA (Plan → Do → Study → Act) loop, recording every step into a
+**per-project graph DB (Kùzu)**. The more cycles you run, the more that project's learnings
+accumulate — a long-term memory for AI agents.
 
-## 0. CLI 호출 방법 정하기 (한 번)
+## Cycle at a glance
 
-이 저장소 루트에서 아래로 사용 가능한 형태를 정한다. 이 문서의 `pdsa` 를 정한 형태로 바꿔 읽는다.
+```mermaid
+flowchart LR
+    P["Plan<br/>pdsa plan<br/>sets EXPECTED evaluation"]
+    D["Do<br/>pdsa do<br/>organizes Plan→Do"]
+    S["Study<br/>pdsa study<br/>verdict: met / partial / unmet"]
+    A["Act<br/>pdsa act<br/>learnings + next action"]
+    G[("Kùzu graph memory<br/>per project")]
 
-- `pdsa version` 이 동작하면 → 그대로 `pdsa` 사용.
-- 아니면 개발 트리 형태: `dotnet run --project src/pdsa-cli -- <명령>`.
-  - 반복 호출이 잦으면 한 번 빌드해 두는 게 빠르다:
-    `dotnet build src/pdsa-cli -c Release` → 이후 `src/pdsa-cli/bin/Release/net10.0/pdsa <명령>`.
+    P --> D --> S --> A
+    A -->|"REINFORCES → next cycle"| P
+    P -.->|records| G
+    D -.->|records| G
+    S -.->|records| G
+    A -.->|records| G
+    G -.->|"recall: auto-injected into Plan"| P
+```
 
-## 1. 시작 전 점검
+One task = at least one full cycle. **Read each step's CLI output and feed it into the real work** —
+the loop is worthless if you only record it.
 
-1. **LLM 연결 확인**: `pdsa check`
-   - 성공(✔)이면 진행.
-   - 실패면 사용자에게 설정을 요청:
-     `pdsa config key <키>` 또는 `pdsa config key-file <파일경로>`(키 미노출), 그리고 `pdsa config model <모델>`.
-     지원 모델은 `pdsa models --filter gpt-5.6` 로 확인(기본 `gpt-5.6-terra`).
-2. **프로젝트 지정**: `pdsa project set <프로젝트명>` (보통 현재 저장소 이름).
-   - 이후 모든 기록이 이 프로젝트 DB 에 쌓인다. 확인/목록: `pdsa project show`, `pdsa project list`.
-   - **동시 실행(멀티프로젝트)**: `project set` 은 개인 단위 전역 상태라, 여러 프로젝트를 병렬로 돌리면 서로 덮어쓴다. 대신 각 명령에 `--project <이름>` 을 붙이면 그 호출만 해당 프로젝트 DB 로 독립 실행된다(인자 없으면 전역/현재 디렉터리로 폴백). CLI 는 상태 없이 실행 후 종료되므로, 서로 다른 프로젝트는 DB 가 분리되어 동시에 돌려도 충돌하지 않는다.
-     - 예: `pdsa plan "…" --project svc-a` 와 `pdsa plan "…" --project svc-b` 를 동시에.
+## 0. Decide how to invoke the CLI (once)
 
-## 2. 한 사이클 (P → D → S → A)
+From this repo root, pick the usable form. Read `pdsa` in this document as the form you picked.
 
-작업 하나당 최소 한 사이클을 돈다. 각 단계의 **CLI 출력을 읽고 실제 작업에 반영**한다.
+- If `pdsa version` works → just use `pdsa`.
+- Otherwise, dev-tree form: `dotnet run --project src/pdsa-cli -- <command>`.
+  - If you'll call it often, build once — it's faster:
+    `dotnet build src/pdsa-cli -c Release` → then `src/pdsa-cli/bin/Release/net10.0/pdsa <command>`.
 
-1. **Plan** — 이번에 할 일을 입력한다.
-   `pdsa plan "<무엇을 왜 어떻게 할지>"`
-   → 출력의 **`기대 평가:`** 한 줄(검증가능한 성공 기준)과 **코칭·가설** 서술을 읽는다. 그 기대 평가를 검증하는 방향으로 작업을 진행한다.
-   → 최근 사이클의 학습이 코칭에 **자동 주입**된다(누적 메모리 되먹임). 끄려면 `--no-recall`.
-2. **Do** — 실제 수행한 내용을 보고한다.
-   `pdsa do "<실제로 한 것: 변경/명령/관찰>"`
-   → 출력의 **[Plan→Do 정리]** 를 확인한다(계획 대비 차이 파악).
-3. **Study** — 결과/관찰(측정값 포함)을 보고한다.
-   `pdsa study "<결과 수치와 관찰. 가설이 맞았는지>"`
-   → 출력의 **[학습·개선점]** 을 읽는다. ('Check(됐나?)' 가 아니라 '무엇을 배웠나?')
-4. **Act** — 다음 개선 액션을 받는다.
-   `pdsa act`  (선택: `--note "<메모>"`)
-   → 출력의 **[다음 개선 액션]** 을 받아, 그것을 반영해 다음 사이클의 `pdsa plan` 으로 잇는다.
+## 1. Pre-flight
 
-## 3. 운영 규칙
+1. **Verify the LLM connection**: `pdsa check`
+   - On success (✔), proceed.
+   - On failure, ask the user to configure it:
+     `pdsa config key <key>` or `pdsa config key-file <path>` (keeps the key out of the transcript),
+     plus `pdsa config model <model>`.
+     Check supported models with `pdsa models --filter gpt-5.6` (default `gpt-5.6-terra`).
+2. **Select the project**: `pdsa project set <project-name>` (usually the current repo name).
+   - Everything from here is recorded into that project's DB. Inspect with `pdsa project show`,
+     `pdsa project list`.
+   - **Concurrent runs (multi-project)**: `project set` is global per-user state, so running several
+     projects in parallel will overwrite each other. Instead, add `--project <name>` to each command
+     and that invocation alone runs against that project's DB (falls back to global / current
+     directory when omitted). The CLI is stateless and exits after each call, so different projects
+     have separate DBs and never collide.
+     - e.g. `pdsa plan "…" --project svc-a` and `pdsa plan "…" --project svc-b` at the same time.
 
-- 각 단계 출력(가설/정리/학습/개선점)을 **사용자에게 짧게 요약**해 전달하고, **다음 작업에 반영**한다.
-- 계획만 하고 끝내지 말 것 — `plan` 이 세운 가설을 실제로 검증하고 `study` 로 학습을 남긴다.
-- 여러 저장소/프로젝트를 오갈 땐 시작 시 `pdsa project set <이름>` 으로 전환한다(각 프로젝트 메모리 분리). 병렬로 동시에 돌릴 땐 `project set` 대신 각 명령에 `--project <이름>` 을 붙인다(위 §1.2).
-- **팁(공식 아님) — 역할별 분리**: 한 프로젝트 안에서 여러 흐름을 병렬로 돌릴 땐 `<프로젝트>-<역할>` 식 이름을 별도 프로젝트로 써서 `--project` 로 분리하면 각 역할이 독립 사이클을 가진다(예: `myrepo-frontend`, `myrepo-infra`). 한 프로젝트의 '진행 중 사이클' 은 하나만 추적되므로, 동시 진행이 필요하면 이렇게 이름을 나눈다.
-- 누적 상태 확인: `pdsa status` (최근 사이클/단계). 그래프 시각화: `pdsa view` (로컬 포트 뷰어).
-- 텍스트에 따옴표/개행이 있어도 그대로 전달 가능(파라미터 바인딩으로 안전 저장됨).
+## 2. One cycle (P → D → S → A)
 
-## 4. 명령 요약
+1. **Plan** — state what you're about to do.
+   `pdsa plan "<what, why, how>"`
+   → Read the **`기대 평가:` (expected result)** line — a verifiable success criterion — and the
+   coaching/hypothesis prose. Drive the work toward validating that expected result.
+   → Learnings from recent cycles are **auto-injected** into the coaching (accumulated-memory
+   feedback). Disable with `--no-recall`.
+2. **Do** — report what you actually did.
+   `pdsa do "<actual changes / commands / observations>"`
+   → Read the **[Plan→Do 정리]** section to see where execution diverged from the plan.
+3. **Study** — report results and observations, including measurements.
+   `pdsa study "<numbers and observations; did the hypothesis hold?>"`
+   → Read the **[학습·개선점]** section. The question is "what did we learn?", not "did it pass?".
+4. **Act** — get the next improvement action.
+   `pdsa act`  (optional: `--note "<memo>"`)
+   → Take the **[다음 개선 액션]** and carry it into the next cycle's `pdsa plan`.
 
-| 명령 | 용도 |
+## 3. Operating rules
+
+- **Summarize each step's output for the user** (hypothesis / gap / learnings / next action) and
+  **apply it to the following work**.
+- Don't stop at planning — actually validate the hypothesis `plan` set, and leave the learning in
+  `study`.
+- When switching between repos/projects, run `pdsa project set <name>` at the start (memories stay
+  separate). For genuinely parallel runs, skip `project set` and pass `--project <name>` per command
+  (see §1.2).
+- **Tip (not official) — split by role**: to run several streams inside one project in parallel, use
+  `<project>-<role>` as separate project names with `--project` so each role gets its own cycle
+  (e.g. `myrepo-frontend`, `myrepo-infra`). Only one "in-progress cycle" is tracked per project, so
+  split the name when you need concurrency.
+- Inspect accumulated state: `pdsa status` (recent cycles/steps). Graph visualization: `pdsa view`
+  (local-port viewer).
+- Text with quotes or newlines can be passed as-is (stored safely via parameter binding).
+
+## 4. Command summary
+
+| Command | Purpose |
 |---|---|
-| `pdsa project set/list/show/clear` | 활성 프로젝트 지정·목록(멀티프로젝트 DB 분리) |
-| `pdsa plan "…"` | 계획 입력 → 가설·측정지표 코칭(새 사이클) |
-| `pdsa do "…"` | 수행 보고 → Plan→Do 그래프 정리 |
-| `pdsa study "…"` | 결과 보고 → 학습·개선점 |
-| `pdsa act [--note "…"]` | 다음 개선 액션(사이클 종료) |
-| `pdsa recall ["<주제>"]` | 과거 사이클 학습 되읽기(계획 컨텍스트). plan 이 자동 주입 |
-| `pdsa status` / `pdsa view` | 누적 상태 / 그래프 뷰어 |
-| `pdsa update [--check]` | 최신 버전 확인·업데이트(npm 전역). `--check` 는 확인만 |
-| `pdsa config …` / `pdsa check` / `pdsa models` | LLM 키·모델 설정 / 연결 확인 / 모델 목록 |
+| `pdsa project set/list/show/clear` | Select/list the active project (per-project DB separation) |
+| `pdsa plan "…"` | Enter a plan → hypothesis & metric coaching (starts a new cycle) |
+| `pdsa do "…"` | Report execution → Plan→Do graph summary |
+| `pdsa study "…"` | Report results → learnings & improvement points |
+| `pdsa act [--note "…"]` | Next improvement action (closes the cycle) |
+| `pdsa recall ["<topic>"]` | Re-read past cycle learnings as planning context; `plan` injects it automatically |
+| `pdsa status` / `pdsa view` | Accumulated state / graph viewer |
+| `pdsa update [--check]` | Check for and install the latest version (global npm); `--check` only checks |
+| `pdsa config …` / `pdsa check` / `pdsa models` | LLM key & model setup / connection check / model list |
 
-전체 도움말: `pdsa`(인자 없이) 또는 `pdsa <명령> --help`.
+Full help: `pdsa` (no args) or `pdsa <command> --help`.
 
-## 5. 에이전트용 구조화 출력(`--json`) & 메모리 되읽기(`recall`)
+## 5. Structured output for agents (`--json`) & memory recall (`recall`)
 
-프로즈(한국어 코칭)를 정규식으로 긁지 말 것. `plan`/`do`/`study`/`act`/`status`/`eval`/`recall` 에
-**`--json`** 을 붙이면 stdout 에 한 줄 JSON 객체만 방출된다(프로즈 배너 생략, 기본 출력은 불변).
-CLI 가 이미 파싱해 둔 필드를 그대로 노출하므로 파싱이 안정적이다(camelCase).
+Don't regex-scrape the prose (the coaching is Korean). Adding **`--json`** to
+`plan`/`do`/`study`/`act`/`status`/`eval`/`recall` emits exactly one JSON object on stdout (prose
+banners suppressed; default output unchanged). It exposes the fields the CLI already parsed, so
+parsing is stable (camelCase).
 
 - `plan --json` → `{project, cycle, reinforceOf, expected, narrative, llmEnabled}`
 - `study --json` → `{project, cycle, expected, verdict, actual, narrative, llmEnabled}` (`verdict` = `met|partial|unmet`)
 - `act --json` → `{project, cycle, reinforce, what, narrative, hitRate:{met,total}, cycleCount, llmEnabled}`
-- `status --json` → 전체(미절삭) 사이클/단계. `eval --json` → 사이클별 기대/판정/실제.
-- `recall ["<주제>"] --json` → `{project, topic, learnings:[{cycle, verdict, expected, actual, study, act}]}`
+- `status --json` → all cycles/steps, untruncated. `eval --json` → expected/verdict/actual per cycle.
+- `recall ["<topic>"] --json` → `{project, topic, learnings:[{cycle, verdict, expected, actual, study, act}]}`
 
-되읽기: `pdsa recall "<주제>"` 로 관련 과거 학습을 당겨와 계획 전 컨텍스트로 삼는다(주제 생략 시 최근 학습).
-프로즈 상태를 전체로 보려면 `pdsa status --full` / `pdsa eval --full` (절삭 해제).
-`llmEnabled:false` 면 LLM 미설정으로 코칭·판정이 생략된 것(기록만 됨) — 종료코드만 보지 말 것.
+Recall: use `pdsa recall "<topic>"` to pull related past learnings as context before planning
+(omit the topic for the most recent learnings).
+For full prose state, use `pdsa status --full` / `pdsa eval --full` (disables truncation).
+`llmEnabled:false` means no LLM is configured, so coaching/verdicts were skipped and only the record
+was written — don't judge by exit code alone.
