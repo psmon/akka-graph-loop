@@ -414,3 +414,9 @@ tests/AkkaGraphLoop.Tests/
 - **[PDSA — 역사적 배경, 이론, 그리고 품질의 유산](PDSA-ko.md)** — 이 프로젝트가 왜 PDSA 위에 세워졌는가:
   슈와트 → 데밍 → 일본의 품질 부상(도요타·닌텐도) → 뒤늦게 다시 배우는 서구, 그리고 **PDCA vs PDSA**.
   사실검증 완료. (English: [PDSA.md](PDSA.md))
+
+- **[자기개선 루프 — 이 프로젝트를 만든 22번의 PDSA 사이클](docs/pdsa-self-loop/README-ko.md)** — 이 저장소
+  자신의 PDSA 여정을 개발기로 풀어낸 문서. 2026-08-26 이후 22번의 사이클이 `pdsa` CLI 자신의 루프를 돌았고,
+  그 그래프 메모리를 깃 로그와 대조해 썼다: 기대 충족률 40% → 88%, 유일한 `unmet` 하나, 버려졌는데 코드는
+  나간 사이클 하나, 회차별 히어로 카드, 그리고 전체 그래프(노드 108·엣지 133)를 그린 별자리.
+  (English: [README.md](docs/pdsa-self-loop/README.md))
